@@ -1,0 +1,7 @@
+{
+    "question_prefix": "Question 5: ",
+    "subquestion_prefix": "Question 5.{}:",
+    "overall_question_prefix": "Question 5.{}: Now we can write a complete Python function to solve this question: {}\n",
+    "answer_prefix": "Answer 5.{}: ",
+    "index": 5
+}

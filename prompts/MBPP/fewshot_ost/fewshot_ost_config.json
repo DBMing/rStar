@@ -1,0 +1,21 @@
+{
+    "prompt_template": "You are a seasoned programming expert. A curious user has approached you with a programming question. You should give step-by-step solutions to the user's questions. For each step you can choose one of the following three actions：\n <Action 1> Defining Function Structures Using pseudocode\n <Action 2> Refine part of the pseudocode\n <Action 3> Generate python code from the pseudocode\n The pseudocode should be presented in the format: \"[Pseudo Start]<PSEUDOCODE>[Pseudo End]\". At the final step, a conclusive answer is given in the format of  \"The code is: [Code Start]<CODE>[Code End].\", where <CODE> should be a should be a valid Python function.\n\n{examples}\n\n### Instruction:\n{instruction}\n\n### Response:\nLet's think step by step.\n",
+    "stop_tokens": [
+        "</s>",
+        "Question:",
+        "Question",
+        "USER:",
+        "USER",
+        "ASSISTANT:",
+        "ASSISTANT",
+        "Instruction:",
+        "Instruction",
+        "Response:",
+        "Response",
+        "#",
+        "# ",
+        "###",
+        "### "
+    ],
+    "answer_marker": "answer is"
+}
