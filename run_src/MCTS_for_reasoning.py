@@ -146,14 +146,14 @@ class Generator:
         return passed_full_completion, confidence
     
     @time_decorator
-    def _get_TACO_code(self, io_output_list: List[str], test_case: dict) -> Tuple[str, float]:
+    def _get_TACO_code(self, io_output_list: List[str], test_case: dict, solution_trace: Dict[int, Dict[str, str]],) -> Tuple[str, float]:
         assert len(io_output_list) > 0
 
 
-        _, passed_full_completion, _, confidence = self.evaluator.find_TACO_code(io_output_list, test_case)
+        _, passed_full_completion, confidence, solution_trace_ = self.evaluator.find_TACO_code(io_output_list, test_case, solution_trace)
         assert confidence >= 0
 
-        return passed_full_completion, confidence
+        return passed_full_completion, confidence, solution_trace_
 
     def _fewshot_cot_answer_question(self, question: str, paraphrased: bool, num_return: int, hint: str = None):
         fewshot_cot_prompt = self.fewshot_cot_prompt if not paraphrased else self.fewshot_cot_prompt_rephrased
@@ -473,28 +473,24 @@ class Generator:
         have_terminal_ost_step = False
         for ost_step in ost_step_list:
             if reach_terminal_ost_step(ost_step):
-                # if have_terminal_ost_step == False:
-                #     have_terminal_ost_step = True
-                #     io_input = (
-                #         self.fewshot_ost_config["prompt_template"].format(
-                #             examples=self.fewshot_ost_prompt if not paraphrased else self.fewshot_ost_prompt_rephrased,
-                #             instruction=user_question,
-                #         )
-                #         + existing_ost_steps
-                #         + f"Step {next_ost_step_id}:"
-                #     )
-                #     # io_output_list = self.io.generate(
-                #     #     model_input=io_input, max_tokens=2048, num_return=16, stop_tokens=self.fewshot_ost_config["stop_tokens"]
-                #     # )
-                #     io_output_list = self.io.generate(
-                #         model_input=io_input, max_tokens=4096, num_return=8, stop_tokens=["\\n\\n", "Step"]
-                #     )
-                #     cleaned_io_output_list = [io_output.strip() for io_output in io_output_list]
-                #     # passed_full_completion, confidence = self._get_pass_code(cleaned_io_output_list, user_question)
-                #     passed_full_completion, confidence = self._get_TACO_code(cleaned_io_output_list, test_case)
-                #     last_ost_step.append(passed_full_completion)
-                #     value_list.append(confidence)
-                #     break
+                if have_terminal_ost_step == False:
+                    have_terminal_ost_step = True
+                    # io_output_list = self.io.generate(
+                    #     model_input=io_input, max_tokens=2048, num_return=16, stop_tokens=self.fewshot_ost_config["stop_tokens"]
+                    # )
+                    io_output_list = self.io.generate(
+                        model_input=io_input, max_tokens=4096, num_return=10, stop_tokens=["\\n\\n", "Step"]
+                    )
+                    cleaned_io_output_list = [io_output.strip() for io_output in io_output_list]
+                    # passed_full_completion, confidence = self._get_pass_code(cleaned_io_output_list, user_question)
+                    passed_full_completion, confidence, solution_trace_with_last_step = self._get_TACO_code(cleaned_io_output_list, test_case, solution_trace)
+                    last_ost_step.append(passed_full_completion)
+                    value_list.append(confidence)
+                    solution_trace_with_last_step[0]["trace_value"] = confidence
+                    with open("/home/pod/shared-nvme/rStar/run_outputs/last_step_record.json", 'a+') as file:
+                        json.dump(solution_trace_with_last_step, file)
+                        file.write(',')
+                    break
                 # io_input = (
                 #     self.fewshot_ost_config["prompt_template"].format(
                 #         examples=self.fewshot_ost_prompt if not paraphrased else self.fewshot_ost_prompt_rephrased,
@@ -506,55 +502,31 @@ class Generator:
                 # io_output_list = self.io.generate(
                 #     model_input=io_input, max_tokens=2048, num_return=16, stop_tokens=self.fewshot_ost_config["stop_tokens"]
                 # )
-                io_output_list = self.io.generate(
-                    model_input=io_input, max_tokens=2048, num_return=8, stop_tokens=["\\n\\n", "Step"]
-                )
-                cleaned_io_output_list = [io_output.strip() for io_output in io_output_list]
-                # passed_full_completion, confidence = self._get_pass_code(cleaned_io_output_list, user_question)
-                for last_step in cleaned_io_output_list:
-                    passed_full_completion, confidence = self._get_TACO_code([last_step], test_case)
-                    last_ost_step.append(passed_full_completion)
-                    value_list.append(confidence)
+                # io_output_list = self.io.generate(
+                #     model_input=io_input, max_tokens=2048, num_return=8, stop_tokens=["\\n\\n", "Step"]
+                # )
+                # cleaned_io_output_list = [io_output.strip() for io_output in io_output_list]
+                # # passed_full_completion, confidence = self._get_pass_code(cleaned_io_output_list, user_question)
+                # for last_step in cleaned_io_output_list:
+                #     passed_full_completion, confidence = self._get_TACO_code([last_step], test_case)
+                #     last_ost_step.append(passed_full_completion)
+                #     value_list.append(confidence)
             else:
                 last_ost_step.append(ost_step)
                 value_list.append(None)
                 
         #! generate potential answer to the user question
         potential_answers_list: List[List[str]] = []  # essentially direct answer list
-        if self.enable_potential_score:
-            for ost_step in ost_step_list:
-                response_prefix = make_response_prefix(solution_trace, Node_Type.OST_STEP, new_ost_step=ost_step)
-
-                potential_score_input = "Question: " + user_question + "\nAnswer: " + response_prefix
-
-                potential_score_output = self.io.generate(
-                    potential_score_input,
-                    num_return=self.num_votes,
-                    max_tokens=128,
-                    stop_tokens=self.fewshot_cot_config["stop_tokens"],
-                )
-                potential_score_input2 = [
-                    "Question: "
-                    + user_question
-                    + "\nAnswer: "
-                    + response_prefix
-                    + z
-                    + "\nTherefore, the answer (arabic numerals) is"
-                    for z in potential_score_output
-                ]
-                cleaned_io_output_list = self.io.generate(
-                    potential_score_input2,
-                    num_return=1,
-                    max_tokens=128,
-                    stop_tokens=self.fewshot_cot_config["stop_tokens"],
-                )
-                cleaned_io_output_list = [z[0] for z in cleaned_io_output_list]
-
-                potential_answers_list.append(
-                    [self.evaluator.extract_answer_from_model_completion(o) for o in cleaned_io_output_list]
-                )
         # print(len(ost_step_list), len(value_list), len(potential_answers_list))
         print(value_list)
+        if value_list.count(None) != 0 and value_list.count(None) != len(value_list):
+            for idx, value in enumerate(value_list):
+                if value is not None:
+                    number = value
+                    corresponding_step = last_ost_step[idx]
+                    break
+            value_list = [number]
+            last_ost_step = [corresponding_step]
         potential_answers_list = [None] * len(value_list)
         return last_ost_step, value_list, potential_answers_list
 
@@ -836,7 +808,6 @@ class Reasoning_MCTS_Node(MCTS_Node):
         return self.node_type is Node_Type.USER_QUESTION or self.node_type is Node_Type.REPHRASED_USER_QUESTION
 
 
-difficulty = {"pass":{}, "fail":{}}
 def search_for_answers(args, user_question: str, question_id: int, gt_answer: str, generator: Generator, test_case: dict):
     verbose_print(
         f"********************* Searching for answers to question {question_id} ********************* ", args.verbose
@@ -877,14 +848,15 @@ def search_for_answers(args, user_question: str, question_id: int, gt_answer: st
     
         with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - rollout Solutions.json"), "a") as f:
             json.dump(jss, f)
+            f.write(',')
         
         ost_best_node, ost_all_solution_nodes, TREE = ost_find_best_solution(root_node, generator.evaluator)
         
-        # complete_road = []
+        complete_road = []
         
-        # for solution_node in ost_all_solution_nodes:
-        #     complete_road_json = find_solution(solution_node, mcts_searcher)
-        #     complete_road.append(complete_road_json)
+        for solution_node in ost_all_solution_nodes:
+            complete_road_json = find_solution(solution_node, mcts_searcher)
+            complete_road.append(complete_road_json)
             
             
     bestv = -1
@@ -894,18 +866,10 @@ def search_for_answers(args, user_question: str, question_id: int, gt_answer: st
             if rollout_node.node_value > bestv:
                 bestv = rollout_node.node_value
                 ost_best_node = rollout_node
-    if gt_answer not in difficulty:
-        difficulty["pass"][gt_answer] = 0
-        difficulty["fail"][gt_answer] = 0
-    if ost_best_node is not None:
-        if ost_best_node.node_value != 1e-7:
-            difficulty["pass"][gt_answer] += 1
-        else:
-            difficulty["fail"][gt_answer] += 1
-    else:
-        difficulty["fail"][gt_answer] += 1
-    # with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - Complete Solutions.json"), "w", encoding="utf-8") as f:
-    #     json.dump(complete_road, f, ensure_ascii=False, indent=4)
+    
+        
+    with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - Complete Solutions.json"), "w", encoding="utf-8") as f:
+        json.dump(complete_road, f, ensure_ascii=False, indent=4)
     #! record final traces
     js = [{"trace": node.solution_trace, "rollout_id": node.rollout_id, "parent_id": node.parent.id, "value": node.node_value} for node in ost_all_solution_nodes]
     with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - Final Solutions.json"), "w") as f:
@@ -927,9 +891,7 @@ def search_for_answers(args, user_question: str, question_id: int, gt_answer: st
         js = [node.potential_answers_history for node in ost_all_solution_nodes]
         with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - Potentials.json"), "w") as f:
             json.dump(js, f) 
-            
-    with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - Difficulty.json"), "w") as f:
-        json.dump(difficulty, f)
+
     
     # if TREE is not None:
     #     for k, v in TREE.items():

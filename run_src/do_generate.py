@@ -1,6 +1,10 @@
 # Licensed under the MIT license.
 
 import sys
+
+print("传入的参数: ", sys.argv)
+
+
 import os, json, time
 from tqdm import tqdm
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -48,7 +52,7 @@ def main(args):
     start_time = time.time()
 
     for i, data_item in enumerate(
-        (pbar := tqdm(data_item_list[29:], disable=args.local_rank > 0 or args.verbose, position=1))
+        (pbar := tqdm(data_item_list, disable=args.local_rank > 0 or args.verbose, position=1))
     ):
         if i < args.start_idx or i >= args.end_idx:
             continue

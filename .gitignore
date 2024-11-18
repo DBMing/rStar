@@ -16,3 +16,7 @@ prompts/GSM8K
 prompts/GSM8KHARD
 prompts/MATH
 prompts/MULTIARITHgi
+chosen_data.json
+dpo_data.json
+rejected_data.json
+test.ipynb

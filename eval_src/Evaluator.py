@@ -7,6 +7,7 @@ import os, json, re
 from typing import List, Dict, Tuple
 from collections import defaultdict
 import random
+import copy
 from fuzzywuzzy import fuzz, process
 
 from multiprocessing import Manager, Process
@@ -119,12 +120,14 @@ class Evaluator:
             confidence,
         )
         
-    def find_TACO_code(self, completions: List[str], test_case: dict):
+    def find_TACO_code(self, completions: List[str], test_case: dict, solution_trace: Dict[int, Dict[str, str]],):
         if completions is None or len(completions) == 0:
             return None, None, None, None
-        
+        solution_trace_ = copy.deepcopy(solution_trace)   
         id2pass_completions = defaultdict(list)
         pass_id_list = []
+        solution_trace_[0]["last_step_content"] = {}
+        solution_trace_[0]["last_step_correctness"] = {}
         
         for id, c in enumerate(completions):
             result = self.parser.process_solution(c)
@@ -155,17 +158,20 @@ class Evaluator:
             if passed:
                 pass_id_list.append(id)
                 id2pass_completions[id].append(c)
+            
+            solution_trace_[0]["last_step_content"][id] = c
+            solution_trace_[0]["last_step_correctness"][id] = passed
                 
         if len(pass_id_list) == 0:
-            return "", completions[0], "", 0.0000001
+            return "", completions[0], 0.0000001, solution_trace_
         
         confidence = len(pass_id_list) / len(completions)  
         passed_completion = completions[pass_id_list[0]]
         return (
             "",
             passed_completion,
-            pass_id_list[0],
             confidence,
+            solution_trace_,
         )
 
     def find_most_confident_answer(self, completions: List[str], prior_weights: List[float] = None):

@@ -12,7 +12,7 @@ from openai import OpenAI
 #     api_key=os.environ.get("AZURE_OPENAI_API_KEY", ""),
 # )
 
-api_key = "sk-LrjucJECi1rernr13dD001F485D643C5B44225512783Af43"
+api_key = "sk-qlNhLbskmACCDkGI273c4eE3672242CeB2160532416943F5"
 base_url = "https://api.132999.xyz/v1"
 
 client = OpenAI(
@@ -78,7 +78,7 @@ def generate_n_with_OpenAI_model(
     top_k=40,
     top_p=0.95,
     stop=["\n"],
-    max_threads=3,
+    max_threads=16,
     disable_tqdm=True,
 ):
     preds = []

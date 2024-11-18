@@ -724,7 +724,11 @@ def find_solution(solution_node, mcts_searcher):
     comlete_solution = {}
     
     def reback(node):
-        comlete_solution[node.depth] = {"node_id": node.id, "ost_step": node.ost_step, "step_value": node.node_value / mcts_searcher.N[node]}
+        if node.node_value is not None and mcts_searcher.N[node] != 0:
+            value = node.node_value / mcts_searcher.N[node]
+        else:
+            value = 0
+        comlete_solution[node.depth] = {"node_id": node.id, "ost_step": node.ost_step, "step_value": value}
         if node.node_type is Node_Type.USER_QUESTION:
             return
         
