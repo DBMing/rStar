@@ -464,7 +464,7 @@ class Generator:
         # io_input = {"role": "user", "content": io_input}
         # print(io_input)
         io_output_list = self.io.generate(
-            model_input=io_input, max_tokens=4096, num_return=self.num_a1_steps, stop_tokens=["\\n\\n", "Step"]
+            model_input=io_input, max_tokens=5120, num_return=self.num_a1_steps, stop_tokens=["\\n\\n", "Step"]
         )
         ost_step_list = [io_output.strip() for io_output in io_output_list]
 
@@ -479,7 +479,7 @@ class Generator:
                     #     model_input=io_input, max_tokens=2048, num_return=16, stop_tokens=self.fewshot_ost_config["stop_tokens"]
                     # )
                     io_output_list = self.io.generate(
-                        model_input=io_input, max_tokens=4096, num_return=10, stop_tokens=["\\n\\n", "Step"]
+                        model_input=io_input, max_tokens=5120, num_return=10, stop_tokens=["Step"]
                     )
                     cleaned_io_output_list = [io_output.strip() for io_output in io_output_list]
                     # passed_full_completion, confidence = self._get_pass_code(cleaned_io_output_list, user_question)
