@@ -13,7 +13,10 @@ tmp
 prompts/GSM8K
 prompts/GSM8KHARD
 prompts/MATH
-prompts/MULTIARITHgi
+prompts/MULTIARITH
+prompts/STG
+prompts/SVAMP
+prompts/MBPPPLUS
 chosen_data.json
 dpo_data.json
 rejected_data.json
