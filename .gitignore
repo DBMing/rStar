@@ -10,7 +10,7 @@ tmp
 /run_outputs
 /test_outputs
 /mistralai/
-prompts/GSM8K
+/prompts/GSM8K
 prompts/GSM8KHARD
 prompts/MATH
 prompts/MULTIARITH
