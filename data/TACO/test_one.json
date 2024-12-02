@@ -1,0 +1,124 @@
+[
+    {
+        "question": "# Task\n You are given three integers `l, d and x`. Your task is:\n```\n• determine the minimal integer n \n    such that l ≤ n ≤ d, and the sum of its digits equals x.\n• determine the maximal integer m \n    such that l ≤ m ≤ d, and the sum of its digits equals x.\n```\nIt is guaranteed that such numbers always exist.\n\n# Input/Output\n\n\n - `[input]` integer `l`\n\n - `[input]` integer `d`\n\n  `1 ≤ l ≤ d ≤ 10000.`\n\n\n - `[input]` integer `x`\n\n  `1 ≤ x ≤ 36`\n\n\n - `[output]` an integer array\n\n  Array of two elements, where the first element is `n`, and the second one is `m`.\n\n\n# Example\n\n For `l = 500, d = 505, x = 10`, the output should be `[505, 505]`.\n \n For `l = 100, d = 200, x = 10`, the output should be `[109, 190]`.",
+        "solutions": [
+            "def min_and_max(l, d, x):\n\tlistOfCorect = [num for num in list(range(l, d + 1)) if sum(map(int, str(num))) == x]\n\treturn [min(listOfCorect), max(listOfCorect)]\n",
+            "def min_and_max(l, d, x):\n\tfor n in range(l, d + 1):\n\t\tif sum(map(int, str(n))) == x:\n\t\t\tbreak\n\tfor m in range(d, l - 1, -1):\n\t\tif sum(map(int, str(m))) == x:\n\t\t\tbreak\n\treturn [n, m]\n",
+            "def min_and_max(l, d, x):\n\treturn [next((i for i in range(l, d + 1) if sum((int(n) for n in str(i))) == x)), next((i for i in range(d, l - 1, -1) if sum((int(n) for n in str(i))) == x))]\n",
+            "def min_and_max(l, d, x):\n\n\tdef min_or_max(l, d, x, end, step):\n\t\treturn next((i for i in range(l, d + end, step) if sum(map(int, list(str(i)))) == x))\n\treturn [min_or_max(l, d, x, 1, 1), min_or_max(d, l, x, 0, -1)]\n",
+            "func = lambda n: sum(map(int, str(n)))\n\ndef min_and_max(l, d, x):\n\twhile func(l) != x:\n\t\tl += 1\n\twhile func(d) != x:\n\t\td -= 1\n\treturn [l, d]\n",
+            "from operator import itemgetter\n\ndef min_and_max(l, d, x):\n\treturn list(itemgetter(0, -1)([i for i in range(l, d + 1) if sum(map(int, list(str(i)))) == x]))\n",
+            "def min_and_max(l, d, x):\n\tarr = [i for i in range(l, d + 1) if sum(map(int, str(i))) == x]\n\treturn [arr[0], arr[-1]]\n",
+            "def min_and_max(l, d, x):\n\td_sum = lambda n: sum(map(int, str(n)))\n\tmin = next((i for i in range(l, d + 1) if d_sum(i) == x))\n\tmax = next((i for i in range(d, l - 1, -1) if d_sum(i) == x))\n\treturn [min, max]\n"
+        ],
+        "starter_code": "def min_and_max(l, d, x):\n\t",
+        "input_output": {
+            "fn_name": "min_and_max",
+            "inputs": [
+                [
+                    100,
+                    200,
+                    10
+                ],
+                [
+                    123,
+                    456,
+                    5
+                ],
+                [
+                    99,
+                    501,
+                    5
+                ],
+                [
+                    99,
+                    234,
+                    1
+                ],
+                [
+                    99,
+                    234,
+                    19
+                ],
+                [
+                    99,
+                    5001,
+                    27
+                ],
+                [
+                    99,
+                    5001,
+                    28
+                ],
+                [
+                    2000,
+                    7000,
+                    3
+                ]
+            ],
+            "outputs": [
+                [
+                    [
+                        109,
+                        190
+                    ]
+                ],
+                [
+                    [
+                        131,
+                        410
+                    ]
+                ],
+                [
+                    [
+                        104,
+                        500
+                    ]
+                ],
+                [
+                    [
+                        100,
+                        100
+                    ]
+                ],
+                [
+                    [
+                        199,
+                        199
+                    ]
+                ],
+                [
+                    [
+                        999,
+                        4995
+                    ]
+                ],
+                [
+                    [
+                        1999,
+                        4996
+                    ]
+                ],
+                [
+                    [
+                        2001,
+                        3000
+                    ]
+                ]
+            ]
+        },
+        "difficulty": "EASY",
+        "raw_tags": "['Algorithms', 'Fundamentals']",
+        "name": null,
+        "source": "codewars",
+        "tags": "['Fundamentals']",
+        "skill_types": [],
+        "url": "https://www.codewars.com/kata/58fd52b59a9f65c398000096",
+        "Expected Auxiliary Space": null,
+        "time_limit": null,
+        "date": null,
+        "picture_num": null,
+        "memory_limit": null,
+        "Expected Time Complexity": null
+    }
+]

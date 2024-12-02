@@ -10,8 +10,6 @@ tmp
 /run_outputs
 /test_outputs
 /mistralai/
-data/GSM8K/test_all.json
-data/
 prompts/GSM8K
 prompts/GSM8KHARD
 prompts/MATH
