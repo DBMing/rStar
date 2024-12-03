@@ -487,10 +487,10 @@ class Generator:
                     last_ost_step.append(passed_full_completion)
                     value_list.append(confidence)
                     solution_trace_with_last_step[0]["trace_value"] = confidence
-                    with open("/home/pod/shared-nvme/rStar/run_outputs/last_step_record.json", 'a+') as file:
-                        json.dump(solution_trace_with_last_step, file)
-                        file.write(',')
-                    break
+                    # with open("/home/pod/shared-nvme/rStar/run_outputs/last_step_record.json", 'a+') as file:
+                    #     json.dump(solution_trace_with_last_step, file)
+                    #     file.write(',')
+                    # break
                 # io_input = (
                 #     self.fewshot_ost_config["prompt_template"].format(
                 #         examples=self.fewshot_ost_prompt if not paraphrased else self.fewshot_ost_prompt_rephrased,

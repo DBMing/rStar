@@ -1,7 +1,4 @@
 {
-    // 使用 IntelliSense 了解相关属性。 
-    // 悬停以查看现有属性的描述。
-    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -11,19 +8,15 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "env": {
-                "CUDA_VISIBLE_DEVICES": "0"
+                "CUDA_VISIBLE_DEVICES": "4"
             },
             "args": [
                 "--dataset_name",
                 "TACO",
                 "--test_json_filename",
                 "test_one",
-                "--api",
-                "gpt3.5-turbo",
                 "--model_ckpt",
-                "gpt-4o-mini",
-                "--note",
-                "default",
+                "/mnt/sdc1/jiangming/Project/rStar/mistralai/Mistral-7B-v0.1",
                 "--num_rollouts",
                 "1",
                 "--verbose"
