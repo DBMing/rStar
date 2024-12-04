@@ -53,10 +53,6 @@ class MCTS_Node(ABC):
         "Assumes `self` is terminal node. 1=win, 0=loss, .5=tie, etc"
         raise NotImplementedError
 
-    @abstractmethod
-    def skip_backprop(self):
-        "If True, the reward of this node will not be accumulated in the backpropagation step."
-        raise NotImplementedError
 
 
 class MCTS_Searcher:

@@ -48,20 +48,6 @@ def split_user_question(user_question: str):
     return user_question_context, user_question_problem
 
 
-def reach_terminal_subquestion(subquestion: str, user_question: str):
-    assert subquestion is not None
-
-    if "Now we can answer" in subquestion:
-        #! remember that: when the original question is answerable, please start the subquestion with "Now we can answer the question: "
-        return True
-
-    user_question_2nd_part = split_user_question(user_question)[1]
-    if user_question_2nd_part.lower() in subquestion.lower():
-        return True
-
-    return False
-
-
 def reach_terminal_ost_step(ost_step: str):
     assert ost_step is not None
 

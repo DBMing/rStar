@@ -1,119 +1,51 @@
 [
     {
-        "question": "# Task\n You are given three integers `l, d and x`. Your task is:\n```\n• determine the minimal integer n \n    such that l ≤ n ≤ d, and the sum of its digits equals x.\n• determine the maximal integer m \n    such that l ≤ m ≤ d, and the sum of its digits equals x.\n```\nIt is guaranteed that such numbers always exist.\n\n# Input/Output\n\n\n - `[input]` integer `l`\n\n - `[input]` integer `d`\n\n  `1 ≤ l ≤ d ≤ 10000.`\n\n\n - `[input]` integer `x`\n\n  `1 ≤ x ≤ 36`\n\n\n - `[output]` an integer array\n\n  Array of two elements, where the first element is `n`, and the second one is `m`.\n\n\n# Example\n\n For `l = 500, d = 505, x = 10`, the output should be `[505, 505]`.\n \n For `l = 100, d = 200, x = 10`, the output should be `[109, 190]`.",
+        "question": "**Step 1:** Create a function called `encode()` to replace all the lowercase vowels in a given string with numbers according to the following pattern:\n```\na -> 1\ne -> 2\ni -> 3\no -> 4\nu -> 5\n```\n\nFor example, `encode(\"hello\")` would return `\"h2ll4\"`. There is no need to worry about uppercase vowels in this kata.\n\n**Step 2:** Now create a function called `decode()` to turn the numbers back into vowels according to the same pattern shown above.\n\nFor example, `decode(\"h3 th2r2\")` would return `\"hi there\"`.\n\nFor the sake of simplicity, you can assume that any numbers passed into the function will correspond to vowels.",
         "solutions": [
-            "def min_and_max(l, d, x):\n\tlistOfCorect = [num for num in list(range(l, d + 1)) if sum(map(int, str(num))) == x]\n\treturn [min(listOfCorect), max(listOfCorect)]\n",
-            "def min_and_max(l, d, x):\n\tfor n in range(l, d + 1):\n\t\tif sum(map(int, str(n))) == x:\n\t\t\tbreak\n\tfor m in range(d, l - 1, -1):\n\t\tif sum(map(int, str(m))) == x:\n\t\t\tbreak\n\treturn [n, m]\n",
-            "def min_and_max(l, d, x):\n\treturn [next((i for i in range(l, d + 1) if sum((int(n) for n in str(i))) == x)), next((i for i in range(d, l - 1, -1) if sum((int(n) for n in str(i))) == x))]\n",
-            "def min_and_max(l, d, x):\n\n\tdef min_or_max(l, d, x, end, step):\n\t\treturn next((i for i in range(l, d + end, step) if sum(map(int, list(str(i)))) == x))\n\treturn [min_or_max(l, d, x, 1, 1), min_or_max(d, l, x, 0, -1)]\n",
-            "func = lambda n: sum(map(int, str(n)))\n\ndef min_and_max(l, d, x):\n\twhile func(l) != x:\n\t\tl += 1\n\twhile func(d) != x:\n\t\td -= 1\n\treturn [l, d]\n",
-            "from operator import itemgetter\n\ndef min_and_max(l, d, x):\n\treturn list(itemgetter(0, -1)([i for i in range(l, d + 1) if sum(map(int, list(str(i)))) == x]))\n",
-            "def min_and_max(l, d, x):\n\tarr = [i for i in range(l, d + 1) if sum(map(int, str(i))) == x]\n\treturn [arr[0], arr[-1]]\n",
-            "def min_and_max(l, d, x):\n\td_sum = lambda n: sum(map(int, str(n)))\n\tmin = next((i for i in range(l, d + 1) if d_sum(i) == x))\n\tmax = next((i for i in range(d, l - 1, -1) if d_sum(i) == x))\n\treturn [min, max]\n"
+            "def encode(s, t=str.maketrans('aeiou', '12345')):\n\treturn s.translate(t)\n\ndef decode(s, t=str.maketrans('12345', 'aeiou')):\n\treturn s.translate(t)\n",
+            "CIPHER = ('aeiou', '12345')\n\ndef encode(st):\n\treturn st.translate(str.maketrans(CIPHER[0], CIPHER[1]))\n\ndef decode(st):\n\treturn st.translate(str.maketrans(CIPHER[1], CIPHER[0]))\n",
+            "def encode(st):\n\tfor (i, v) in enumerate('aeiou', start=1):\n\t\tst = st.replace(v, str(i))\n\treturn st\n\ndef decode(st):\n\tfor (i, v) in enumerate('aeiou', start=1):\n\t\tst = st.replace(str(i), v)\n\treturn st\n",
+            "tbl1 = str.maketrans('aeiou', '12345')\ntbl2 = str.maketrans('12345', 'aeiou')\n\ndef encode(st):\n\treturn st.translate(tbl1)\n\ndef decode(st):\n\treturn st.translate(tbl2)\n",
+            "a = {'a': '1', 'e': '2', 'i': '3', 'o': '4', 'u': '5'}\nb = ('a', 'e', 'i', 'o', 'u')\n\ndef encode(st):\n\treturn ''.join((a[c] if c in a else c for c in st))\n\ndef decode(st):\n\treturn ''.join((b[int(c) - 1] if c.isdigit() else c for c in st))\n",
+            "def cipher(mode):\n\ttable = str.maketrans(*['aeiou', '12345'][::mode])\n\treturn lambda s: s.translate(table)\n(encode, decode) = (cipher(1), cipher(-1))\n",
+            "CYPHER = tuple(zip('aeiou', '12345'))\n\ndef munge(st, mapping):\n\treturn ''.join([mapping.get(c, c) for c in st])\n\ndef encode(st):\n\treturn munge(st, {a: b for (a, b) in CYPHER})\n\ndef decode(st):\n\treturn munge(st, {b: a for (a, b) in CYPHER})\n",
+            "def encode(st):\n\tL = []\n\tA = {'a': '1', 'e': '2', 'i': '3', 'o': '4', 'u': '5'}\n\tfor i in st:\n\t\tif i in A:\n\t\t\tL.append(A[i])\n\t\telse:\n\t\t\tL.append(i)\n\treturn ''.join(L)\n\ndef decode(st):\n\tL = []\n\tA = {'1': 'a', '2': 'e', '3': 'i', '4': 'o', '5': 'u'}\n\tfor i in st:\n\t\tif i in A:\n\t\t\tL.append(A[i])\n\t\telse:\n\t\t\tL.append(i)\n\treturn ''.join(L)\n",
+            "import re\n\ndef encode(st):\n\tvowel = ' aeiou'\n\treturn re.sub('[aeoui]', lambda x: str(vowel.index(x.group(0))), st)\n\ndef decode(st):\n\tvowel = ' aeiou'\n\treturn re.sub('[1-5]', lambda x: vowel[int(x.group(0))], st)\n",
+            "a = ['a', 'e', 'i', 'o', 'u']\n\ndef encode(st):\n\treturn ''.join([str(a.index(c) + 1) if c in a else c for c in st])\n\ndef decode(st):\n\treturn ''.join([a[int(c) - 1] if c.isdigit() else c for c in st])\n"
         ],
-        "starter_code": "def min_and_max(l, d, x):\n\t",
+        "starter_code": "def encode(st):\n\t",
         "input_output": {
-            "fn_name": "min_and_max",
+            "fn_name": "encode",
             "inputs": [
                 [
-                    100,
-                    200,
-                    10
+                    "hello"
                 ],
                 [
-                    123,
-                    456,
-                    5
+                    "How are you today?"
                 ],
                 [
-                    99,
-                    501,
-                    5
-                ],
-                [
-                    99,
-                    234,
-                    1
-                ],
-                [
-                    99,
-                    234,
-                    19
-                ],
-                [
-                    99,
-                    5001,
-                    27
-                ],
-                [
-                    99,
-                    5001,
-                    28
-                ],
-                [
-                    2000,
-                    7000,
-                    3
+                    "This is an encoding test."
                 ]
             ],
             "outputs": [
                 [
-                    [
-                        109,
-                        190
-                    ]
+                    "h2ll4"
                 ],
                 [
-                    [
-                        131,
-                        410
-                    ]
+                    "H4w 1r2 y45 t4d1y?"
                 ],
                 [
-                    [
-                        104,
-                        500
-                    ]
-                ],
-                [
-                    [
-                        100,
-                        100
-                    ]
-                ],
-                [
-                    [
-                        199,
-                        199
-                    ]
-                ],
-                [
-                    [
-                        999,
-                        4995
-                    ]
-                ],
-                [
-                    [
-                        1999,
-                        4996
-                    ]
-                ],
-                [
-                    [
-                        2001,
-                        3000
-                    ]
+                    "Th3s 3s 1n 2nc4d3ng t2st."
                 ]
             ]
         },
         "difficulty": "EASY",
-        "raw_tags": "['Algorithms', 'Fundamentals']",
+        "raw_tags": "['Regular Expressions', 'Strings', 'Fundamentals', 'Arrays']",
         "name": null,
         "source": "codewars",
-        "tags": "['Fundamentals']",
-        "skill_types": [],
-        "url": "https://www.codewars.com/kata/58fd52b59a9f65c398000096",
+        "tags": "['String algorithms', 'Fundamentals', 'Data structures']",
+        "skill_types": "['Data structures']",
+        "url": "https://www.codewars.com/kata/53697be005f803751e0015aa",
         "Expected Auxiliary Space": null,
         "time_limit": null,
         "date": null,

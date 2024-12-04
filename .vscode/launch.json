@@ -15,8 +15,10 @@
                 "TACO",
                 "--test_json_filename",
                 "test_one",
+                "--api",
+                "OpenAI",
                 "--model_ckpt",
-                "/mnt/sdc1/jiangming/Project/rStar/mistralai/Mistral-7B-v0.1",
+                "gpt-4o-mini",
                 "--num_rollouts",
                 "1",
                 "--verbose"

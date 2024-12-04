@@ -10,7 +10,7 @@ def get_parser():
 
     parser.add_argument("--note", type=str, default="debug")
 
-    allowed_apis = ["together", "huggingface", "llama", "vllm", "debug", "gpt3.5-turbo"]
+    allowed_apis = ["together", "huggingface", "llama", "vllm", "debug", "OpenAI"]
     parser.add_argument(
         "--api", type=str, choices=allowed_apis, default="vllm", help=f"API to use: Choose from {allowed_apis}."
     )
@@ -27,12 +27,12 @@ def get_parser():
     parser.add_argument("--model_parallel", action="store_true")
     parser.add_argument("--half_precision", action="store_true")
 
-    parser.add_argument("--max_tokens", type=int, default=1024, help="max_tokens")
+    parser.add_argument("--max_tokens", type=int, default=4096, help="max_tokens")
     parser.add_argument("--temperature", type=float, default=0.8, help="temperature")
     parser.add_argument("--top_k", type=int, default=40, help="top_k")
     parser.add_argument("--top_p", type=float, default=0.95, help="top_p")
     parser.add_argument("--num_beams", type=int, default=1, help="num_beams")
-    # parser.add_argument('--repetition_penalty', type=float, default=1.1, help='repetition_penalty')
+    
     parser.add_argument("--max_num_worker", type=int, default=3, help="maximum number of workers for dataloader")
     parser.add_argument("--test_batch_size", type=int, default=1)  # batch_size
     parser.add_argument("--tensor_parallel_size", type=int, default=1)  # tensor_parallel_size

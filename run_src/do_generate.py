@@ -40,7 +40,7 @@ def main(args):
         from models.vLLM_API import load_vLLM_model
 
         tokenizer, model = load_vLLM_model(args.model_ckpt, args.seed, args.tensor_parallel_size, args.half_precision)
-    elif args.api == "gpt3.5-turbo":
+    elif args.api == "OpenAI":
         from models.OpenAI_API import load_OpenAI_model
 
         tokenizer, model = load_OpenAI_model(args.model_ckpt)
@@ -124,10 +124,6 @@ if __name__ == "__main__":
     parser = get_parser()
 
     parser.add_argument("--num_rollouts", type=int, default=15)
-    parser.add_argument(
-        "--num_subquestions", type=int, default=3, help="Number of trials for proposing the next subquestion"
-    )
-    parser.add_argument("--num_votes", type=int, default=10)
     parser.add_argument("--max_depth_allowed", type=int, default=5)
 
     # MCTS
@@ -141,9 +137,6 @@ if __name__ == "__main__":
     parser.add_argument("--num_a1_steps", type=int, default=None)
     parser.add_argument("--disable_a1", action="store_true")
 
-    # Paraphrasing
-    parser.add_argument("--modify_prompts_for_rephrasing", action="store_true")
-    parser.add_argument("--disable_a5", action="store_true")
 
     #! -------------------------- Used for selecting answer --------------------------
     parser.add_argument("--enable_potential_score", action="store_true")
@@ -163,32 +156,11 @@ if __name__ == "__main__":
 
     prompts_dir = os.path.join(args.prompts_root, args.dataset_name)
 
-    args.fewshot_cot_prompt_path = os.path.join(prompts_dir, "fewshot_cot", "fewshot_cot_prompt.txt")
-    args.fewshot_cot_config_path = os.path.join(prompts_dir, "fewshot_cot", "fewshot_cot_config.json")
 
     args.fewshot_ost_prompt_path = os.path.join(prompts_dir, "fewshot_ost", "fewshot_ost_prompt.txt")
     args.fewshot_ost_config_path = os.path.join(prompts_dir, "fewshot_ost", "fewshot_ost_config.json")
-
-    args.decompose_template_path = os.path.join(prompts_dir, "decompose", "decompose_template.json")
-    args.decompose_prompt_path = os.path.join(prompts_dir, "decompose", "decompose_prompt.txt")
-
-    if not args.disable_a5:
-        args.rephrasing_prompt_template_path = os.path.join(prompts_dir, "rephrasing_prompt_template.txt")
-        if args.modify_prompts_for_rephrasing:
-            args.fewshot_cot_prompt_rephrased_path = os.path.join(
-                prompts_dir, "fewshot_cot", "fewshot_cot_prompt_rephrased.txt"
-            )
-            args.fewshot_ost_prompt_rephrased_path = os.path.join(
-                prompts_dir, "fewshot_ost", "fewshot_ost_prompt_rephrased.txt"
-            )
-            args.decompose_prompt_rephrased_path = os.path.join(
-                prompts_dir, "decompose", "decompose_prompt_rephrased.txt"
-            )
-        else:
-            args.fewshot_cot_prompt_rephrased_path = os.path.join(prompts_dir, "fewshot_cot", "fewshot_cot_prompt.txt")
-            args.fewshot_ost_prompt_rephrased_path = os.path.join(prompts_dir, "fewshot_ost", "fewshot_ost_prompt.txt")
-            args.decompose_prompt_rephrased_path = os.path.join(prompts_dir, "decompose", "decompose_prompt.txt")
-
+    
+    
     args = post_process_args(args)
     print(args)
     save_args(args)

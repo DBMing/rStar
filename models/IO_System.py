@@ -77,7 +77,7 @@ class IO_System:
                 #     self.token_counter += num_tokens
                     
                 # self.call_counter += 1
-            elif self.api == "gpt3.5-turbo":
+            elif self.api == "OpenAI":
                 gpt_response = generate_n_with_OpenAI_model(
                     prompt=model_input,
                     n=num_return,
