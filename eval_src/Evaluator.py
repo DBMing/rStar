@@ -125,9 +125,9 @@ class Evaluator:
             return None, None, None, None
         solution_trace_ = copy.deepcopy(solution_trace)   
         id2pass_completions = defaultdict(list)
-        pass_id_list = []
-        solution_trace_[0]["last_step_content"] = {}
-        solution_trace_[0]["last_step_correctness"] = {}
+        pass_ratio = 0
+        compile_pass = False
+        
         
         for id, c in enumerate(completions):
             result = self.parser.process_solution(c)
@@ -140,39 +140,38 @@ class Evaluator:
                         if "name" in result["main_function"]:
                             if test_case["fn_name"] != result["main_function"]['name']:
                                 test_case["fn_name"] = result["main_function"]['name']
-            # if "fn_name" in test_case and "main_function" in result:
-            #     main_fn = result["main_function"]
-            #     if "name" in main_fn and test_case["fn_name"] != main_fn["name"]:
-            #         test_case["fn_name"] = main_fn["name"]
-            #     else:
-            #         continue
-                
+            
+            
+            
+            if generation_code == None:
+                pass_ratio = 0
+                continue
+            
+            
             correctness_results = check_generation_correctness(test_case, generation_code, debug=True, n_cases=10)
+            print(correctness_results)
             
             if isinstance(correctness_results, list):
-                passed = all(x is True for x in correctness_results)
+                if True in correctness_results or False in correctness_results:
+                    compile_pass = True
+                pass_case_count = correctness_results.count(True)
+
+                # 计算比例
+                pass_ratio = pass_case_count / len(correctness_results)
             else:
-                passed = False
+                pass_ratio = 0
             
-            print(f"*********** {id} : {passed}   *********")
-            if passed:
-                pass_id_list.append(id)
-                id2pass_completions[id].append(c)
+            alpha = 0
+            if compile_pass:
+                pass_ratio = alpha * 1 + (1 - alpha) * pass_ratio
             
-            solution_trace_[0]["last_step_content"][id] = c
-            solution_trace_[0]["last_step_correctness"][id] = passed
+            print(f"*********** {id} : score  :  {pass_ratio}   *********")
+            
+            
+            
                 
-        if len(pass_id_list) == 0:
-            return "", completions[0], 0.0000001, solution_trace_
+        return "", completions[0], pass_ratio, solution_trace_
         
-        confidence = len(pass_id_list) / len(completions)  
-        passed_completion = completions[pass_id_list[0]]
-        return (
-            "",
-            passed_completion,
-            confidence,
-            solution_trace_,
-        )
 
     def find_most_confident_answer(self, completions: List[str], prior_weights: List[float] = None):
         """Returns the most confident answer, its completion, its id in the input list, and its confidence."""

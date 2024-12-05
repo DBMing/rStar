@@ -112,65 +112,40 @@ class Generator:
 
         last_ost_step = []
         value_list = []
-        have_terminal_ost_step = False
+        completion_confidence_list = []
+        reach_last_step_flag = False
+        # have_terminal_ost_step = False
         for ost_step in ost_step_list:
             if reach_terminal_ost_step(ost_step):
-                if have_terminal_ost_step == False:
-                    have_terminal_ost_step = True
-                    # io_output_list = self.io.generate(
-                    #     model_input=io_input, max_tokens=2048, num_return=16, stop_tokens=self.fewshot_ost_config["stop_tokens"]
-                    # )
-                    io_output_list = self.io.generate(
-                        model_input=io_input, max_tokens=5120, num_return=10, stop_tokens=["Step"]
-                    )
-                    cleaned_io_output_list = [io_output.strip() for io_output in io_output_list]
-                    # passed_full_completion, confidence = self._get_pass_code(cleaned_io_output_list, user_question)
-                    passed_full_completion, confidence, solution_trace_with_last_step = self._get_TACO_code(cleaned_io_output_list, test_case, solution_trace)
-                    last_ost_step.append(passed_full_completion)
-                    value_list.append(confidence)
-                    solution_trace_with_last_step[0]["trace_value"] = confidence
-                    # with open("/home/pod/shared-nvme/rStar/run_outputs/last_step_record.json", 'a+') as file:
-                    #     json.dump(solution_trace_with_last_step, file)
-                    #     file.write(',')
-                    # break
-                # io_input = (
-                #     self.fewshot_ost_config["prompt_template"].format(
-                #         examples=self.fewshot_ost_prompt if not paraphrased else self.fewshot_ost_prompt_rephrased,
-                #         instruction=user_question,
-                #     )
-                #     + existing_ost_steps
-                #     + f"Step {next_ost_step_id}:"
-                # )
-                # io_output_list = self.io.generate(
-                #     model_input=io_input, max_tokens=2048, num_return=16, stop_tokens=self.fewshot_ost_config["stop_tokens"]
-                # )
-                # io_output_list = self.io.generate(
-                #     model_input=io_input, max_tokens=2048, num_return=8, stop_tokens=["\\n\\n", "Step"]
-                # )
-                # cleaned_io_output_list = [io_output.strip() for io_output in io_output_list]
-                # # passed_full_completion, confidence = self._get_pass_code(cleaned_io_output_list, user_question)
-                # for last_step in cleaned_io_output_list:
-                #     passed_full_completion, confidence = self._get_TACO_code([last_step], test_case)
-                #     last_ost_step.append(passed_full_completion)
-                #     value_list.append(confidence)
+                reach_last_step_flag = True
+                passed_full_completion, confidence, solution_trace_with_last_step = self._get_TACO_code([ost_step], test_case, solution_trace)
+                completion_confidence_list.append((passed_full_completion, confidence))
             else:
                 last_ost_step.append(ost_step)
                 value_list.append(None)
-                
-        #! generate potential answer to the user question
-        potential_answers_list: List[List[str]] = []  # essentially direct answer list
-        # print(len(ost_step_list), len(value_list), len(potential_answers_list))
-        print(value_list)
-        if value_list.count(None) != 0 and value_list.count(None) != len(value_list):
-            for idx, value in enumerate(value_list):
-                if value is not None:
-                    number = value
-                    corresponding_step = last_ost_step[idx]
-                    break
-            value_list = [number]
-            last_ost_step = [corresponding_step]
-        potential_answers_list = [None] * len(value_list)
-        return last_ost_step, value_list, potential_answers_list
+        
+        if reach_last_step_flag == True:
+            last_ost_step.clear()
+            value_list.clear()
+            completion_confidence_list.sort(key=lambda x: x[1], reverse=True)
+            best_passing_completion, highest_confidence = completion_confidence_list[0]
+            
+            for _, confidence in completion_confidence_list:
+                print(confidence)
+            return [best_passing_completion], [highest_confidence], [None]
+        else:
+            potential_answers_list: List[List[str]] = []
+            print(value_list)
+            if value_list.count(None) != 0 and value_list.count(None) != len(value_list):
+                for idx, value in enumerate(value_list):
+                    if value is not None:
+                        number = value
+                        corresponding_step = last_ost_step[idx]
+                        break
+                value_list = [number]
+                last_ost_step = [corresponding_step]
+            potential_answers_list = [None] * len(value_list)
+            return last_ost_step, value_list, potential_answers_list
 
 
 class Reasoning_MCTS_Node(MCTS_Node):
@@ -209,7 +184,7 @@ class Reasoning_MCTS_Node(MCTS_Node):
             assert node_type is not None
             if node_value is not None:
                 print(node_value)
-                assert node_value > 0, breakpoint()
+                assert node_value >= 0, breakpoint()
 
             if node_type is Node_Type.USER_QUESTION:
                 assert depth == 0
@@ -432,13 +407,13 @@ def search_for_answers(args, user_question: str, question_id: int, gt_answer: st
             json.dump(jss, f)
             f.write(',')
         
-        ost_best_node, ost_all_solution_nodes, TREE = ost_find_best_solution(root_node, generator.evaluator)
+    ost_best_node, ost_all_solution_nodes, TREE = ost_find_best_solution(root_node, generator.evaluator)
         
-        complete_road = []
-        
-        for solution_node in ost_all_solution_nodes:
-            complete_road_json = find_solution(solution_node, mcts_searcher)
-            complete_road.append(complete_road_json)
+    complete_road = []
+    
+    for solution_node in ost_all_solution_nodes:
+        complete_road_json = find_solution(solution_node, mcts_searcher)
+        complete_road.append(complete_road_json)
             
             
     bestv = -1

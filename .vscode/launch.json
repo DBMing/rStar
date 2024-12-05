@@ -8,19 +8,17 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "env": {
-                "CUDA_VISIBLE_DEVICES": "4"
+                "CUDA_VISIBLE_DEVICES": "6"
             },
             "args": [
                 "--dataset_name",
                 "TACO",
                 "--test_json_filename",
                 "test_one",
-                "--api",
-                "OpenAI",
                 "--model_ckpt",
-                "gpt-4o-mini",
+                "/mnt/sdc1/jiangming/Project/rStar/Qwen/Qwen2.5-Coder-7B",
                 "--num_rollouts",
-                "1",
+                "10",
                 "--verbose"
             ]
         }
