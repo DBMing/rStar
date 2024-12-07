@@ -8,6 +8,7 @@ tmp
 /deepseek-ai/
 /Qwen/
 /run_outputs
+/run_baseline
 /test_outputs
 /mistralai/
 /prompts/GSM8K

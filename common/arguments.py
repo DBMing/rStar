@@ -42,7 +42,7 @@ def get_parser():
 
     #! dataset settings
     parser.add_argument("--data_root", default="data")
-    allowed_dataset_names = ["MATH", "GSM8K", "GSM8KHARD", "STG", "SVAMP", "MULTIARITH", "MBPP", "MBPPPLUS", "TACO"]
+    allowed_dataset_names = ["TACO"]
     parser.add_argument(
         "--dataset_name",
         required=True,
@@ -56,6 +56,7 @@ def get_parser():
     #! outputs settings
     parser.add_argument("--run_outputs_root", type=str, default="run_outputs")
     parser.add_argument("--eval_outputs_root", type=str, default="eval_outputs")
+    parser.add_argument("--run_outputs_dir", type=str, default="")
 
     return parser
 
@@ -64,12 +65,20 @@ def post_process_args(args):
     # Set up logging
     suffix = "---[" + args.note + "]" if args.note is not None else ""
     model_name = args.model_ckpt.split("/")[-1]
-    args.run_outputs_dir = os.path.join(
-        args.run_outputs_root,
-        args.dataset_name,
-        model_name,
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}" + suffix,
-    )
+    if args.run_outputs_dir == "":
+        args.run_outputs_dir = os.path.join(
+            args.run_outputs_root,
+            args.dataset_name,
+            model_name,
+            f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}" + suffix,
+        )
+    else:
+        args.run_outputs_dir = os.path.join(
+            args.run_outputs_root,
+            args.dataset_name,
+            model_name,
+            f"{args.run_outputs_dir}---{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}" + suffix,
+        )
     os.makedirs(args.run_outputs_dir, exist_ok=True)
 
 
@@ -84,10 +93,6 @@ def post_process_args(args):
     args.cuda_1 = cuda_devices[1] if len(cuda_devices) > 1 else None
     args.cuda_2 = cuda_devices[2] if len(cuda_devices) > 2 else None
     args.cuda_3 = cuda_devices[3] if len(cuda_devices) > 3 else None
-
-    if len(cuda_devices) == 1:
-        if args.cuda_0 == "NVIDIA A100-SXM4-40GB" and not args.half_precision:
-            print("Warning! A100-SXM4-40GB is used, but half_precision is not enabled.")
 
     return args
 

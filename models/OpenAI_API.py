@@ -6,18 +6,10 @@ from tqdm import tqdm
 import concurrent.futures
 from openai import OpenAI
 
-# client = AzureOpenAI(
-#     api_version="",
-#     azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT", ""),
-#     api_key=os.environ.get("AZURE_OPENAI_API_KEY", ""),
-# )
-
-api_key = "sk-qlNhLbskmACCDkGI273c4eE3672242CeB2160532416943F5"
-base_url = "https://api.132999.xyz/v1"
-
-client = OpenAI(
-    api_key=api_key,
-    base_url=base_url
+client = AzureOpenAI(
+    api_version="",
+    azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT", ""),
+    api_key=os.environ.get("AZURE_OPENAI_API_KEY", ""),
 )
 
 max_threads = 32

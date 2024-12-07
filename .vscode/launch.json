@@ -15,11 +15,16 @@
                 "TACO",
                 "--test_json_filename",
                 "test_one",
+                // "--api",
+                // "OpenAI",
                 "--model_ckpt",
+                // "gpt-4o-mini",
                 "/mnt/sdc1/jiangming/Project/rStar/Qwen/Qwen2.5-Coder-7B",
                 "--num_rollouts",
                 "10",
-                "--verbose"
+                "--verbose",
+                "--run_outputs_dir",
+                "debug-test"
             ]
         }
     ]

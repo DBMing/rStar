@@ -61,7 +61,6 @@ def generate_with_vLLM_model(
 
 
 if __name__ == "__main__":
-    # model_ckpt = "mistralai/Mistral-7B-v0.1"
     model_ckpt = "deepseek-ai/deepseek-coder-1.3b-instruct"
     tokenizer, model = load_vLLM_model(model_ckpt, seed=42, tensor_parallel_size=1, half_precision=False)
     input = "write a python function to calculate the sum of two numbers"

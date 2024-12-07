@@ -3,7 +3,7 @@
 import sys
 
 
-print("传入的参数: ", sys.argv)
+print("args: ", sys.argv)
 
 import os, json, time
 from tqdm import tqdm
@@ -13,7 +13,6 @@ sys.path.append(".")
 
 from common.utils import fix_seeds, setup_model_parallel, read_json
 from common.arguments import get_parser, post_process_args, save_args
-from run_src.rstar_utils import GeneratorError
 from MCTS_for_reasoning import Generator, search_for_answers
 from eval_src.Evaluator import *
 
@@ -46,8 +45,6 @@ def main(args):
         tokenizer, model = load_OpenAI_model(args.model_ckpt)
     generator = Generator(args, tokenizer, model, evaluator)
 
-    total_correct = 0
-    total_correct_limit = 0
     num_tested = 0
     start_time = time.time()
 
@@ -57,43 +54,25 @@ def main(args):
         if i < args.start_idx or i >= args.end_idx:
             continue
         st_time = time.time()
-        problem_id, problem, gt_solution, test_case = i, data_item["question"], data_item["difficulty"], data_item["input_output"] 
-        # gt_answer = evaluator.extract_answer_from_gold_solution(gt_solution)
-        if gt_solution == 'MEDIUM_HARD':
-            continue
+        problem_id, problem, test_case, difficulty = i, data_item["question"],data_item["input_output"], data_item["difficulty"]
+        gt_solution = data_item["solutions"][0] if len(data_item["solutions"]) > 0 else None
 
         js = {
             "id": problem_id,
             "problem": problem,
-            "model_completion": None,
-            "model_answer": None,
-            "all_model_completions": {},
             "gold_solution": gt_solution,
-            "gold_answer": gt_solution,
             "test_case": test_case,
+            "difficulty": difficulty,
         }
 
-        model_solutions, stopping_id, model_all_solutions = [], -1, []
-
-        # try:
+        
         model_solutions, stopping_id, model_all_solutions = search_for_answers(
-            args=args, user_question=problem, question_id=i, gt_answer=gt_solution, generator=generator, test_case = test_case
+            args=args, user_question=problem, question_id=i, difficulty=difficulty, generator=generator, test_case = test_case
         )
-        # except GeneratorError as e:
-        #     print(e)
-        #     js["generator_error"] = {
-        #         "source": e.source,
-        #         "io_input": e.io_input,
-        #         "io_output_list": e.io_output_list,
-        #     }
-        # except Exception as e:
-        #     print(e)
-        #     js["other_error"] = {"text": str(e)}
-
+        
         num_tested += 1
 
-        with open(os.path.join(args.answer_sheets_dir, f"Question {i:04d} - Answer.json"), "w") as f:
-            json.dump(js, f)
+        
 
         with open(os.path.join(args.run_outputs_dir, "intermediate_result.txt"), "w") as f:
             f.write(
@@ -103,6 +82,10 @@ def main(args):
                 f"Total tokens: {generator.io.token_counter}, Avg tokens: {generator.io.token_counter/(num_tested):.2f}\n"
             )
         ed_time = time.time()
+        js["time_taken"] = f"{ed_time-st_time:.2f}s"
+        
+        with open(os.path.join(args.answer_sheets_dir, f"Question {i:04d} - Answer.json"), "w") as f:
+            json.dump(js, f)
         print(f"==> Time taken for this question: {ed_time-st_time:.2f}s")
 
     end_time = time.time()
@@ -134,8 +117,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_tree", action="store_true")
 
     # Action1: Propose an one-step thought.
-    parser.add_argument("--num_a1_steps", type=int, default=None)
-    parser.add_argument("--disable_a1", action="store_true")
+    parser.add_argument("--num_sampling", type=int, default=3)
 
 
     #! -------------------------- Used for selecting answer --------------------------
@@ -148,17 +130,13 @@ if __name__ == "__main__":
     if args.mcts_num_last_votes is None:
         args.mcts_num_last_votes = 32
 
-    if not args.disable_a1:
-        if args.num_a1_steps is None:
-            args.num_a1_steps = 3
-
     #! ----------------------------------------------------------------------------
 
     prompts_dir = os.path.join(args.prompts_root, args.dataset_name)
 
 
-    args.fewshot_ost_prompt_path = os.path.join(prompts_dir, "fewshot_ost", "fewshot_ost_prompt.txt")
-    args.fewshot_ost_config_path = os.path.join(prompts_dir, "fewshot_ost", "fewshot_ost_config.json")
+    args.examples_txt_path = os.path.join(prompts_dir, "examples.txt")
+    args.prompt_config_path = os.path.join(prompts_dir, "prompt.json")
     
     
     args = post_process_args(args)

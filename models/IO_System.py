@@ -39,8 +39,6 @@ class IO_System:
         self.token_counter = 0
         
         
-        # self.new_tokenizer = AutoTokenizer.from_pretrained("/home/pod/shared-nvme/rStar/deepseek-ai/deepseek-coder-6.7b-base-sft", trust_remote_code=True)
-        # self.new_model = AutoModelForCausalLM.from_pretrained("/home/pod/shared-nvme/rStar/deepseek-ai/deepseek-coder-6.7b-base-sft", trust_remote_code=True, torch_dtype=torch.bfloat16).cuda()
     @time_decorator
     def generate(self, model_input, max_tokens: int, num_return: int, stop_tokens):
         if isinstance(model_input, str):
@@ -58,25 +56,7 @@ class IO_System:
                 io_output_list = [o.text for o in vllm_response[0].outputs]
                 self.call_counter += 1
                 self.token_counter += sum([len(o.token_ids) for o in vllm_response[0].outputs])
-                # io_output_list = []
-                # inputs = self.new_tokenizer(model_input, return_tensors="pt").to(self.new_model.device)
-                # for _ in range(num_return):
-                #     outputs = self.new_model.generate(**inputs, max_length=4096, do_sample=True)  # do_sample=True 启用采样
-                #     generated_text = self.new_tokenizer.decode(outputs[0], skip_special_tokens=True)
-                    
-                #     for token in stop_tokens:
-                #         if token in generated_text:
-                #             generated_text = generated_text.split(token)[0]  # 截断停止词后的内容
-                #             break  # 停止检查其他停止词
-                #     io_output_list.append(generated_text)
-                    
-                #     # 计算回答的token数
-                #     generated_tokens = self.new_tokenizer(generated_text, return_tensors="pt")['input_ids']
-                #     num_tokens = generated_tokens.shape[1]
-                #     print(f"Sample {_+1} token count: {num_tokens}")
-                #     self.token_counter += num_tokens
-                    
-                # self.call_counter += 1
+             
             elif self.api == "OpenAI":
                 gpt_response = generate_n_with_OpenAI_model(
                     prompt=model_input,

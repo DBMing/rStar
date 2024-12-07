@@ -42,8 +42,6 @@ def run_test(sample, test=None, debug=False, n_cases=None):
     if debug:
         print(f"start = {datetime.now().time()}")
     try:
-        # in_outs = json.loads(sample["input_output"])
-        # in_outs = sample["input_output"]
         in_outs = sample
     except ValueError:
         in_outs = None
@@ -56,12 +54,6 @@ def run_test(sample, test=None, debug=False, n_cases=None):
             which_type = CODE_TYPE.call_based  # Call-based
             method_name = in_outs["fn_name"]
 
-    # if sample["code_type"] == "STDIO":
-    #     which_type = CODE_TYPE.standard_input
-    #     method_name = None
-    # else:
-    #     which_type = CODE_TYPE.call_based
-    #     raise NotImplementedError()
 
     inputs_list = []
     outputs_list = []

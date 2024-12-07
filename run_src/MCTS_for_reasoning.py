@@ -4,37 +4,26 @@ import sys
 
 sys.path.append(".")
 
-import numpy as np, os, random, json, math, wandb
+import numpy as np
+import os, random, json, math
+import wandb
 from tqdm import trange
 from typing import List, Dict, Tuple
 from copy import deepcopy
 
-try:
-    from rapidfuzz import fuzz, process
-except:
-    pass
 
 from models.IO_System import IO_System
 from common.utils import read_txt, read_json
-from eval_src.Evaluator import Evaluator, GSM8KEvaluator
+from eval_src.Evaluator import Evaluator
 from MCTS_backbone import MCTS_Searcher, MCTS_Node
 from run_src.rstar_utils import (
     Node_Type,
-    GeneratorError,
     reach_terminal_ost_step,
-    concat_subqs_and_subas,
     concat_ost_steps,
-    concat_subqs_subas_as_ost_steps,
-    make_hint,
-    make_response_prefix,
-    split_user_question,
-    print_tree_from_root,
-    find_valid_solution_nodes,
-    find_best_solution,
     ost_find_best_solution,
-    stochastic_find_best_solution,
     find_solution,
     time_decorator,
+    print_tree_from_root
 )
 
 
@@ -50,17 +39,15 @@ class Generator:
         self.io = IO_System(args, tokenizer, model)
         self.evaluator = evaluator
 
-        self.num_a1_steps = args.num_a1_steps
+        self.num_sampling = args.num_sampling
         self.max_tokens = args.max_tokens
         self.enable_potential_score = args.enable_potential_score
 
         self.mcts_num_last_votes = args.mcts_num_last_votes
 
         
-
-        if not args.disable_a1:  # A1: Propose an one-step thought.
-            self.fewshot_ost_prompt = read_txt(args.fewshot_ost_prompt_path)
-            self.fewshot_ost_config = read_json(args.fewshot_ost_config_path)
+        self.examples = read_txt(args.examples_txt_path)
+        self.prompt = read_json(args.prompt_config_path)
 
     
     def _get_pass_code(self, io_output_list: List[str], user_question: str) -> Tuple[str, float]:
@@ -95,18 +82,16 @@ class Generator:
         ost_step_list = []
         existing_ost_steps, next_ost_step_id = concat_ost_steps(solution_trace)
         io_input = (
-            self.fewshot_ost_config["prompt_template"].format(
-                examples=self.fewshot_ost_prompt,
+            self.prompt["prompt_template"].format(
+                examples=self.examples,
                 question=user_question,
             )
             + existing_ost_steps
             + f"<Step_Begin>\n### Step {next_ost_step_id}:"
         )
-        # print(io_input)
-        # io_input = {"role": "user", "content": io_input}
-        # print(io_input)
+        
         io_output_list = self.io.generate(
-            model_input=io_input, max_tokens=8192, num_return=self.num_a1_steps, stop_tokens=["<Step_End>"]
+            model_input=io_input, max_tokens=8192, num_return=self.num_sampling, stop_tokens=["<Step_End>"]
         )
         ost_step_list = [io_output.strip() for io_output in io_output_list]
 
@@ -130,12 +115,10 @@ class Generator:
             completion_confidence_list.sort(key=lambda x: x[1], reverse=True)
             best_passing_completion, highest_confidence = completion_confidence_list[0]
             
-            for _, confidence in completion_confidence_list:
-                print(confidence)
             return [best_passing_completion], [highest_confidence], [None]
         else:
             potential_answers_list: List[List[str]] = []
-            print(value_list)
+            # print(value_list)
             if value_list.count(None) != 0 and value_list.count(None) != len(value_list):
                 for idx, value in enumerate(value_list):
                     if value is not None:
@@ -160,8 +143,7 @@ class Reasoning_MCTS_Node(MCTS_Node):
         generator: Generator = None,
         user_question: str = None,
         max_depth_allowed: int = None,
-        disable_a1: bool = None,
-        expected_answer: str = None,
+        difficulty: str = None,
         # -------------------------------------------
         # --- For instantiating OST_STEP node ---
         ost_step: str = None,
@@ -198,18 +180,17 @@ class Reasoning_MCTS_Node(MCTS_Node):
                 )
                 assert all(
                     attr is not None
-                    for attr in [generator, user_question, expected_answer, max_depth_allowed, disable_a1]
+                    for attr in [generator, user_question, difficulty, max_depth_allowed]
                 )
-            elif node_type is Node_Type.OST_STEP:
+            elif node_type is Node_Type.ONE_STEP:
                 assert depth > 0
                 assert all(
                     attr is None
                     for attr in [
                         generator,
                         user_question,
-                        expected_answer, 
+                        difficulty, 
                         max_depth_allowed,
-                        disable_a1,
                     ]
                 )
                 assert all(attr is not None for attr in [parent, ost_step])
@@ -230,19 +211,17 @@ class Reasoning_MCTS_Node(MCTS_Node):
         if parent is None:  # root
             self.verbose = verbose
             self.user_question = user_question
-            self.expected_answer = expected_answer
+            self.difficulty = difficulty
             self.generator = generator
             self.max_depth_allowed = max_depth_allowed
-            self.disable_a1 = disable_a1
             self.enable_potential_score = enable_potential_score
             self.test_case = test_case
         else:  # inherit from parent
             self.verbose = parent.verbose
             self.user_question = parent.user_question
-            self.expected_answer = parent.expected_answer
+            self.difficulty = parent.difficulty
             self.generator = parent.generator
             self.max_depth_allowed = parent.max_depth_allowed
-            self.disable_a1 = parent.disable_a1
             self.enable_potential_score = parent.enable_potential_score
             self.test_case = parent.test_case
 
@@ -258,7 +237,7 @@ class Reasoning_MCTS_Node(MCTS_Node):
         if parent is None:  # root
             self.ost_step_counter = 0
         else:
-            if node_type is Node_Type.OST_STEP:
+            if node_type is Node_Type.ONE_STEP:
                 self.ost_step_counter = parent.ost_step_counter + 1
             else:
                 self.ost_step_counter = parent.ost_step_counter
@@ -271,7 +250,7 @@ class Reasoning_MCTS_Node(MCTS_Node):
             assert self.node_type is not Node_Type.USER_QUESTION
             self.solution_trace = deepcopy(parent.solution_trace)
 
-            if node_type is Node_Type.OST_STEP:
+            if node_type is Node_Type.ONE_STEP:
                 assert "ost_step" in self.solution_trace[0].keys()
                 self.solution_trace[0]["ost_step"][self.ost_step_counter] = ost_step
                 self.solution_trace[0]["ost_step_value"][self.ost_step_counter] = node_value
@@ -291,7 +270,7 @@ class Reasoning_MCTS_Node(MCTS_Node):
     def __str__(self) -> str:
         type2str = {
             Node_Type.USER_QUESTION: "U",
-            Node_Type.OST_STEP: "TS",
+            Node_Type.ONE_STEP: "TS",
         }
         return f"{type2str[self.node_type]}-{self.id}"
 
@@ -312,7 +291,7 @@ class Reasoning_MCTS_Node(MCTS_Node):
                     Reasoning_MCTS_Node(
                         parent=self,
                         depth=self.depth + 1,
-                        node_type=Node_Type.OST_STEP,
+                        node_type=Node_Type.ONE_STEP,
                         node_value=value,
                         ost_step=ost_step,
                         potential_answers=deepcopy(potential_answers),
@@ -321,29 +300,24 @@ class Reasoning_MCTS_Node(MCTS_Node):
 
         #! create children
         if self.node_type is Node_Type.USER_QUESTION:
-            # A1: Propose an one-step thought.
-            if not self.disable_a1:
-                do_action_generate_ost_step()
+            # generate one-step thought steps
+            do_action_generate_ost_step()
 
        
-        elif self.node_type is Node_Type.OST_STEP:
-            # A1: Propose an one-step thought.
-            if not self.disable_a1:
-                do_action_generate_ost_step()
-
-            # A2: Propose the remaining thought steps
-            # do_action_generate_direct_answers()
+        elif self.node_type is Node_Type.ONE_STEP:
+            
+            do_action_generate_ost_step()
 
         assert self.children
         return self.children
 
     def is_valid_leaf_node(self):
-        #! a valid solution can only be in SUBQUESTION type or DIRECT_ANSWER type
-        return (self.node_type is Node_Type.OST_STEP and reach_terminal_ost_step(self.ost_step))
+        
+        return (self.node_type is Node_Type.ONE_STEP and reach_terminal_ost_step(self.ost_step))
 
     def is_valid_solution_node(self):
-        #! a valid solution can only be in SUBQUESTION type or DIRECT_ANSWER type or OST_STEP type
-        return (self.node_type is Node_Type.OST_STEP and reach_terminal_ost_step(self.ost_step))
+        
+        return (self.node_type is Node_Type.ONE_STEP and reach_terminal_ost_step(self.ost_step))
 
     def set_potential_score(self, score: float):
         self.potential_score = score
@@ -366,7 +340,7 @@ class Reasoning_MCTS_Node(MCTS_Node):
             return 0
 
 
-def search_for_answers(args, user_question: str, question_id: int, gt_answer: str, generator: Generator, test_case: dict):
+def search_for_answers(args, user_question: str, question_id: int, difficulty: str, generator: Generator, test_case: dict):
     verbose_print(
         f"********************* Searching for answers to question {question_id} ********************* ", args.verbose
     )
@@ -388,9 +362,8 @@ def search_for_answers(args, user_question: str, question_id: int, gt_answer: st
         verbose=args.verbose,
         generator=generator,
         user_question=user_question,
-        expected_answer=gt_answer,
+        difficulty=difficulty,
         max_depth_allowed=args.max_depth_allowed,
-        disable_a1=args.disable_a1,
         enable_potential_score=args.enable_potential_score,
         test_case=test_case,
     )
@@ -406,13 +379,15 @@ def search_for_answers(args, user_question: str, question_id: int, gt_answer: st
         with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - rollout Solutions.json"), "a") as f:
             json.dump(jss, f)
             f.write(',')
+    
+    # print_tree_from_root(mcts_searcher, args.num_rollouts - 1, root_node) 
         
     ost_best_node, ost_all_solution_nodes, TREE = ost_find_best_solution(root_node, generator.evaluator)
         
     complete_road = []
     
     for solution_node in ost_all_solution_nodes:
-        complete_road_json = find_solution(solution_node, mcts_searcher)
+        complete_road_json = find_solution(root_node, solution_node, mcts_searcher)
         complete_road.append(complete_road_json)
             
             
@@ -449,13 +424,5 @@ def search_for_answers(args, user_question: str, question_id: int, gt_answer: st
         with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - Potentials.json"), "w") as f:
             json.dump(js, f) 
 
-    
-    # if TREE is not None:
-    #     for k, v in TREE.items():
-    #         js2 = [{"depth": k, "node_id": node.id, "ost_step": node.ost_step} for i, node in enumerate(model_rollout_nodes)]
-    #     with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - TREE.json"), "w") as f:
-    #         json.dump(TREE, f)
-        # with open(os.path.join(args.answer_sheets_dir, f"Question {question_id:04d} - TREE.json"), "w") as f:
-        #     json.dump(TREE, f)
 
     return model_solutions, i, model_all_solutions
