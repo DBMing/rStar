@@ -4,7 +4,6 @@ import sys
 
 print("传入的参数: ", sys.argv)
 
-
 import os, json, time
 from tqdm import tqdm
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
