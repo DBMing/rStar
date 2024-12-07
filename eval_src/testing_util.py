@@ -29,7 +29,7 @@ def timeout_handler(signum, frame):
     #return
     raise TimeoutException
 signal.signal(signal.SIGALRM, timeout_handler)
-TIMEOUT = 4  # seconds
+TIMEOUT = 1  # seconds
 
 EXECUTION_RESULTS = {1: "passed", 0: "false", -1: "timeout", -2: "runtime_error", -3: "returncode:{code}", -4: "compile_error"}
 
@@ -181,14 +181,14 @@ def compile_and_get_func(program, which_type, method_name, timeout, debug):
     return method
 
 def synthesize_cb_code(raw_code, debug=False):
-    sol = "import sys\nimport time\nimport itertools\nfrom itertools import accumulate, product, permutations, combinations\nimport collections\nfrom collections import Counter, OrderedDict, deque, defaultdict, ChainMap\nfrom functools import lru_cache\nimport math\nfrom math import sqrt, sin, cos, tan, ceil, fabs, floor, gcd, exp, log, log2\nimport fractions\nfrom typing import List, Tuple\nimport numpy as np\nimport random\nimport heapq\nfrom heapq import *\n"
+    sol = "import sys\nimport time\nimport itertools\nfrom itertools import accumulate, product, permutations, combinations\nimport collections\nfrom collections import Counter, OrderedDict, deque, defaultdict, ChainMap\nfrom functools import lru_cache\nimport math\nfrom math import sqrt, sin, cos, tan, ceil, fabs, floor, gcd, exp, log, log2\nimport fractions\nfrom typing import List, Tuple\nimport random\nimport heapq\nfrom heapq import *\n"
     if debug:
         print(f"loading test code = {datetime.now().time()}")
     sol += raw_code
     return sol
 
 def synthesize_std_code(raw_code, debug=False):
-    normal_import_lines = "import sys\nimport time\nimport itertools\nfrom itertools import accumulate, product, permutations, combinations\nimport collections\nfrom collections import Counter, OrderedDict, deque, defaultdict, ChainMap\nfrom functools import lru_cache\nimport math\nfrom math import sqrt, sin, cos, tan, ceil, fabs, floor, gcd, exp, log, log2\nimport fractions\nfrom typing import List, Tuple\nimport numpy as np\nimport random\nimport heapq\nfrom heapq import *\n"
+    normal_import_lines = "import sys\nimport time\nimport itertools\nfrom itertools import accumulate, product, permutations, combinations\nimport collections\nfrom collections import Counter, OrderedDict, deque, defaultdict, ChainMap\nfrom functools import lru_cache\nimport math\nfrom math import sqrt, sin, cos, tan, ceil, fabs, floor, gcd, exp, log, log2\nimport fractions\nfrom typing import List, Tuple\nimport random\nimport heapq\nfrom heapq import *\n"
     if debug:
         print(f"loading test code = {datetime.now().time()}")
     
@@ -316,72 +316,133 @@ def remove_tmp_files():
         if tmp_file in os.listdir('.'):
             os.remove(tmp_file)
 
-def execute_std_code(synthesized_code, inputs_list, outputs_list, timeout, early_stop=False, debug=False):
-    temp_program_path = create_temp_file(synthesized_code)
-    if debug:
-        print("Test program:", temp_program_path)
-    assert isinstance(inputs_list, list) and isinstance(outputs_list, list)
-    assert len(inputs_list) == len(outputs_list)
+# def execute_std_code(synthesized_code, inputs_list, outputs_list, timeout, early_stop=False, debug=False):
+#     temp_program_path = create_temp_file(synthesized_code)
+#     if debug:
+#         print("Test program:", temp_program_path)
+#     assert isinstance(inputs_list, list) and isinstance(outputs_list, list)
+#     assert len(inputs_list) == len(outputs_list)
+#     exec_results = {}
+#     if debug:
+#         exec_results['debug'] = {}
+#     for i, inputs in enumerate(inputs_list):
+#         remove_tmp_files()
+#         outputs = outputs_list[i]
+#         if isinstance(inputs, list):
+#             inputs = "\n".join(inputs)
+#         if isinstance(outputs, list):
+#             outputs = "\n".join(outputs)
+#         try:
+#             result = subprocess.run(['python', temp_program_path], input=inputs, text=True, capture_output=True, timeout=timeout)  
+#             exec_code = 999
+#         except subprocess.TimeoutExpired:
+#             exec_code = -1
+#         except Exception as e:
+#             print(e)
+#             exec_code = -2
+
+        
+#         if exec_code > 0:
+#             if result.returncode != 0:
+#                 try:
+#                     inputs_tmp_file = open(create_temp_file(inputs), 'r')
+#                     result = subprocess.run(['python', temp_program_path], stdin=inputs_tmp_file, text=True, capture_output=True, timeout=timeout)
+#                     assert result.returncode == 0
+#                     if compare_std_results(result.stdout, outputs, debug):
+#                         exec_code = 1
+#                     else:
+#                         exec_code = 0
+#                 except:
+#                     try:
+#                         inputs_tmp_file = 'input.txt'
+#                         with open(inputs_tmp_file, 'w') as ftemp:
+#                             ftemp.write(inputs)
+#                         result = subprocess.run(['python', temp_program_path], text=True, timeout=timeout)
+#                         assert result.returncode == 0
+#                         if compare_std_results(open('output.txt').read(), outputs, debug):
+#                             exec_code = 1
+#                         else:
+#                             exec_code = 0
+                        
+#                     except:
+#                         # print('!!!!!!!!!!!!!')
+#                         exec_code = -3
+#             elif compare_std_results(result.stdout, outputs, debug):
+#                 exec_code = 1
+#             else:
+#                 exec_code = 0
+#         exec_results[i] = (exec_code==1, EXECUTION_RESULTS[exec_code] if exec_code>-3 else EXECUTION_RESULTS[exec_code].format(code=result.returncode))
+#         if exec_code >= 0:
+#             if debug:
+#                 print_debug_info(inputs=inputs, outputs=outputs, exec_outputs=result.stdout)
+#                 exec_results['debug'][i] = {
+#                     'inputs': inputs,
+#                     'gt_outputs': outputs,
+#                     'exec_outputs': result.stdout
+#                 }
+#         if early_stop and exec_code<=0:
+#             break
+#     return exec_results
+def execute_std_code(synthesized_code, inputs_list, outputs_list, timeout=1, early_stop=False, debug=False):
     exec_results = {}
     if debug:
         exec_results['debug'] = {}
-    for i, inputs in enumerate(inputs_list):
-        remove_tmp_files()
-        outputs = outputs_list[i]
-        if isinstance(inputs, list):
-            inputs = "\n".join(inputs)
-        if isinstance(outputs, list):
-            outputs = "\n".join(outputs)
+
+    for i, (inputs, outputs) in enumerate(zip(inputs_list, outputs_list)):
+        # Prepare inputs and outputs as strings
+        inputs_str = "\n".join(inputs) if isinstance(inputs, list) else inputs
+        outputs_str = "\n".join(outputs) if isinstance(outputs, list) else outputs
+
+        # Create a temporary file for the test program
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.py', encoding='utf-8') as temp_program:
+            temp_program.write(synthesized_code)
+            temp_program_path = temp_program.name
+
         try:
-            result = subprocess.run(['python', temp_program_path], input=inputs, text=True, capture_output=True, timeout=timeout)  
-            exec_code = 999
+            # Run the Python script with input
+            result = subprocess.run(
+                ['python', temp_program_path], 
+                input=inputs_str, 
+                text=True, 
+                capture_output=True, 
+                timeout=timeout
+            )
+
+            # Determine execution status
+            if result.returncode == 0:
+                test_passed = compare_std_results(result.stdout, outputs_str, debug)
+                exec_code = 1 if test_passed else 0
+            else:
+                exec_code = -3
+
         except subprocess.TimeoutExpired:
             exec_code = -1
         except Exception as e:
-            print(e)
             exec_code = -2
+        finally:
+            # Clean up temporary file
+            os.unlink(temp_program_path)
 
-        
-        if exec_code > 0:
-            if result.returncode != 0:
-                try:
-                    inputs_tmp_file = open(create_temp_file(inputs), 'r')
-                    result = subprocess.run(['python', temp_program_path], stdin=inputs_tmp_file, text=True, capture_output=True, timeout=timeout)
-                    assert result.returncode == 0
-                    if compare_std_results(result.stdout, outputs, debug):
-                        exec_code = 1
-                    else:
-                        exec_code = 0
-                except:
-                    try:
-                        inputs_tmp_file = 'input.txt'
-                        with open(inputs_tmp_file, 'w') as ftemp:
-                            ftemp.write(inputs)
-                        result = subprocess.run(['python', temp_program_path], text=True, timeout=timeout)
-                        assert result.returncode == 0
-                        if compare_std_results(open('output.txt').read(), outputs, debug):
-                            exec_code = 1
-                        else:
-                            exec_code = 0
-                        
-                    except:
-                        # print('!!!!!!!!!!!!!')
-                        exec_code = -3
-            elif compare_std_results(result.stdout, outputs, debug):
-                exec_code = 1
-            else:
-                exec_code = 0
-        exec_results[i] = (exec_code==1, EXECUTION_RESULTS[exec_code] if exec_code>-3 else EXECUTION_RESULTS[exec_code].format(code=result.returncode))
+        # Store result
+        exec_results[i] = (
+            exec_code == 1, 
+            EXECUTION_RESULTS[exec_code] if exec_code > -3 else EXECUTION_RESULTS[exec_code].format(code=result.returncode)
+        )
+
+        # Debug information
         if exec_code >= 0:
             if debug:
                 print_debug_info(inputs=inputs, outputs=outputs, exec_outputs=result.stdout)
                 exec_results['debug'][i] = {
-                    'inputs': inputs,
-                    'gt_outputs': outputs,
+                    'inputs': inputs_str,
+                    'gt_outputs': outputs_str,
                     'exec_outputs': result.stdout
                 }
-        if early_stop and exec_code<=0:
+
+        # Early stopping condition
+        if early_stop and exec_code <= 0:
             break
+
     return exec_results
 
 def print_debug_info(inputs, outputs, exec_outputs):

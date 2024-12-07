@@ -21,3 +21,10 @@ chosen_data.json
 dpo_data.json
 rejected_data.json
 test.ipynb
+data/TACO/self_create_data.json
+eval_src/tempCodeRunnerFile.py
+eval_src/testing_util copy.py
+eval_src/testing_util_yxsx.py
+models/eval_vllm_paralle.py
+models/vllm_server_start.sh
+prompts/TACO/data_qwen_test.py

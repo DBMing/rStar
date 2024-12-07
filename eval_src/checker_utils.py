@@ -8,21 +8,6 @@ class CodeSolutionParser:
         self.final_code = None
         self.main_function = None
         
-    def parse_steps(self, text: str):
-        """Parse the solution text into individual steps."""
-        # Split by "Step" followed by a number
-        step_pattern = r'Step \d+:'
-        # Get all starting positions of steps
-        step_starts = [m.start() for m in re.finditer(step_pattern, text)]
-        
-        # Add the end of text position for the last slice
-        step_starts.append(len(text))
-        
-        # Extract each step's content
-        for i in range(len(step_starts) - 1):
-            step_content = text[step_starts[i]:step_starts[i+1]].strip()
-            self.steps.append(step_content)
-    
     def check_final_step(self, text: str) -> bool:
         """Check if the last step is code generation."""
         if text == "":
@@ -153,15 +138,7 @@ def check_generation_correctness(
     Returns:
         List[bool]: A list of booleans indicating the correctness of each test case. If a timeout occurs, returns a list of -1s.
     """
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #     try:
-    #         future = executor.submit(run_test, test_cases, generation, debug, n_cases)
-    #         return future.result()
-    #     except concurrent.futures.TimeoutError:
-    #         if debug:
-    #             print("global timeout")
-    #         in_outs = test_cases
-    #         return [-1] * len(in_outs["inputs"])
+    
     try:
         return run_test(test_cases, generation, debug, n_cases)
     except Exception as e:
@@ -170,71 +147,3 @@ def check_generation_correctness(
         in_outs = test_cases
         return [-2] * len(in_outs["inputs"])
         
-def eval_generation(
-    generation: str,
-    test_cases: Dict[str, Union[str, List]],
-    debug: bool = False,
-    n_cases: Optional[int] = None,
-):
-    def _normalize_test_result(result):
-
-        if isinstance(result, np.ndarray):
-            return result.item(0)
-        if isinstance(result, np.bool_):
-            return bool(result)
-        return result
-    try:
-        judge_results = check_generation_correctness(test_cases=test_cases, generation=generation, debug=debug, n_cases=n_cases)
-        if debug:
-            print('[INFO]: Sucessfully run the test cases')
-        fixed_judge_results = [_normalize_test_result(result) for result in judge_results]
-        if any(res < 1 for res in fixed_judge_results):
-            if debug:
-                print('[INFO]: Code solution failed some test cases')
-        return fixed_judge_results
-    except Exception as e:
-        import traceback
-        if debug:
-            print(f'[Error]: Error in running test cases: {traceback.format_exc()}')
-        return [-2]
-
-def eval_generations_parallel(
-    generations: List[str],
-    test_cases: Union[List, Dict[str, Union[str, List]]],
-    debug: bool = False,
-    n_cases: Optional[int] = None,
-    return_binary: bool = True,
-):
-    """Evaluate multiple generations in parallel against a set of test cases.
-    Args:
-        generations (List[str]): A list of generated strings to be evaluated.
-        test_cases (Dict[str, Union[str, List]]): A dictionary containing test cases.
-        debug (bool, optional): If True, enables debug mode. Defaults to False.
-        return_binary (bool, optional): If True, returns binary results (1 if all test cases pass, 0 otherwise).
-                                        If False, returns the proportion of passed test cases. Defaults to True.
-    Returns:
-        List[Union[int, float]]: A list where each element corresponds to the evaluation result of a generation.
-                                 If return_binary is True, the result is binary (1 or 0).
-                                 If return_binary is False, the result is a float representing the proportion of passed test cases.
-    """
-    if not isinstance(test_cases, list):
-        test_cases = [test_cases] * len(generations)
-    eval_args = [
-        (generation, test_case, debug, n_cases) for generation, test_case in zip(generations, test_cases)
-    ]
-    n_cores = max(1, mp.cpu_count() - 1)
-    with mp.Pool(n_cores) as pool:
-        eval_results = pool.starmap(eval_generation, eval_args)
-    
-    if return_binary:
-        each_generation_passed_cases = [
-            int(all(case_res > 0 for case_res in eval_res))
-            for eval_res in eval_results
-        ]
-    else:
-        each_generation_passed_cases = [
-            sum(case_res > 0 for case_res in eval_res) / len(eval_res)
-            for eval_res in eval_results
-        ]
-        
-    return each_generation_passed_cases

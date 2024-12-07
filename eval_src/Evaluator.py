@@ -148,7 +148,7 @@ class Evaluator:
                 continue
             
             
-            correctness_results = check_generation_correctness(test_case, generation_code, debug=True, n_cases=10)
+            correctness_results = check_generation_correctness(test_case, generation_code, debug=False, n_cases=10)
             print(correctness_results)
             
             if isinstance(correctness_results, list):

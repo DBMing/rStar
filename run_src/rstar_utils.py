@@ -707,14 +707,46 @@ def ost_find_best_solution(
     return best_node, solution_nodes, TREE
         
 def find_solution(solution_node, mcts_searcher):
+    """
+    Recursively traces back from the given solution node to the root node, 
+    calculating the value of each node along the path.
+
+    Parameters:
+    solution_node (Node): The current solution node to start the backtrace from.
+    mcts_searcher (MCTS): The MCTS searcher object used to access node visit counts and values.
+
+    Returns:
+    dict: A dictionary representing the complete solution, containing the node id, 
+          OST step, step value, and edge information for each node in the path.
+    """
     comlete_solution = {}
     
     def reback(node):
+        """
+        Recursively backtracks from the current node to the root node, 
+        calculating the value for each node and updating the solution.
+
+        Parameters:
+        node (Node): The current node being processed in the backtrack.
+        """
         if node.node_value is not None and mcts_searcher.N[node] != 0:
             value = node.node_value / mcts_searcher.N[node]
         else:
             value = 0
-        comlete_solution[node.depth] = {"node_id": node.id, "ost_step": node.ost_step, "step_value": value}
+        if node.node_type is Node_Type.OST_STEP:
+            comlete_solution[node.depth] = {
+                "node_id": node.id, 
+                "ost_step": node.ost_step, 
+                "step_value": value, 
+                "edges": (node.parent.id, node.id)   # source_node_id -> target_node_id
+            }
+        else:
+            comlete_solution[node.depth] = {
+                "node_id": node.id, 
+                "ost_step": node.ost_step, 
+                "step_value": value, 
+                "edges": (node.id, node.id) 
+            }
         if node.node_type is Node_Type.USER_QUESTION:
             return
         
