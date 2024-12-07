@@ -50,9 +50,14 @@ def split_user_question(user_question: str):
 
 def reach_terminal_ost_step(ost_step: str):
     assert ost_step is not None
-
-    # return "the code is: [code start]" in ost_step.lower()
-    return "[code start]" in ost_step.lower()
+    last_step = ost_step.lower()
+    
+    code_indicators = [
+            # "<action 3>",
+            "```python"
+        ]
+        
+    return any(indicator in last_step for indicator in code_indicators)
 
 
 def print_tree_from_root(mcts_searcher, rollout_id, root_node, chosen_node=None, file=None):
@@ -148,7 +153,7 @@ def concat_ost_steps(solution_trace: Dict[int, Dict[str, str]]) -> Tuple[str, in
     if len(last_tuple_recording["ost_step"]) > 0:
         solution_trace_str = ""
         for step_id, step_text in last_tuple_recording["ost_step"].items():
-            solution_trace_str += f"Step {step_id}: " + step_text + "\n\n"
+            solution_trace_str += f"<Step_Begin>\n### Step {step_id}: " + step_text + "<Step_End>\n\n"
         return solution_trace_str, step_id + 1
     else:
         # no one-step thought step yet

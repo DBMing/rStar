@@ -16,8 +16,7 @@ class CodeSolutionParser:
         last_step = text.lower()
         # Check if the last step mentions code generation
         code_indicators = [
-            "<action 3> generate python code from the pseudocode",
-            "[code start]"
+            "```python"
         ]
         
         return any(indicator in last_step for indicator in code_indicators)

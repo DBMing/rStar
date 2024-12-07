@@ -1,25 +1,427 @@
-### Description
-Dilpreet wants to paint his dog's home that has n boards with different lengths. The length of i^{th }board is given by arr[i] where arr[] is an array of n integers. He hired k painters for this work and each painter takes 1 unit time to paint 1 unit of the board. \nThe problem is to find the minimum time to get this job done if all painters start together with the constraint that any painter will only paint continuous boards, say boards numbered {2,3,4} or only board {1} or nothing but not boards {2,4,5}.\nExample 1:\nInput:\nn = 5\nk = 3\narr[] = {5,10,30,20,15}\nOutput: 35\nExplanation: The most optimal way will be:\nPainter 1 allocation : {5,10}\nPainter 2 allocation : {30}\nPainter 3 allocation : {20,15}\nJob will be done when all painters finish\ni.e. at time = max(5+10, 30, 20+15) = 35\nExample 2:\nInput:\nn = 4\nk = 2\narr[] = {10,20,30,40}\nOutput: 60\nExplanation: The most optimal way to paint:\nPainter 1 allocation : {10,20,30}\nPainter 2 allocation : {40}\nJob will be complete at time = 60\nYour task:\nYour task is to complete the function minTime() which takes the integers n and k and the array arr[] as input and returns the minimum time required to paint all partitions.\nExpected Time Complexity: O(n log m) , m = sum of all boards' length\nExpected Auxiliary Space: O(1)\nConstraints:\n1 ≤ n ≤ 10^{5}\n1 ≤ k ≤ 10^{5}\n1 ≤ arr[i] ≤ 10^{5}
+### Question
+In this problem you have to implement an algorithm to defragment your hard disk. The hard disk consists of a sequence of clusters, numbered by integers from 1 to n. The disk has m recorded files, the i-th file occupies clusters with numbers ai, 1, ai, 2, ..., ai, ni. These clusters are not necessarily located consecutively on the disk, but the order in which they are given corresponds to their sequence in the file (cluster ai, 1 contains the first fragment of the i-th file, cluster ai, 2 has the second fragment, etc.). Also the disc must have one or several clusters which are free from files.
 
-### solution
+You are permitted to perform operations of copying the contents of cluster number i to cluster number j (i and j must be different). Moreover, if the cluster number j used to keep some information, it is lost forever. Clusters are not cleaned, but after the defragmentation is complete, some of them are simply declared unusable (although they may possibly still contain some fragments of files).
+
+Your task is to use a sequence of copy operations to ensure that each file occupies a contiguous area of memory. Each file should occupy a consecutive cluster section, the files must follow one after another from the beginning of the hard disk. After defragmentation all free (unused) clusters should be at the end of the hard disk. After defragmenting files can be placed in an arbitrary order. Clusters of each file should go consecutively from first to last. See explanatory examples in the notes.
+
+Print the sequence of operations leading to the disk defragmentation. Note that you do not have to minimize the number of operations, but it should not exceed 2n.
+
+Input
+
+The first line contains two integers n and m (1 ≤ n, m ≤ 200) — the number of clusters and the number of files, correspondingly. Next m lines contain descriptions of the files. The first number in the line is ni (ni ≥ 1), the number of clusters occupied by the i-th file. Then follow ni numbers ai, 1, ai, 2, ..., ai, ni (1 ≤ ai, j ≤ n). It is guaranteed that each cluster number occurs not more than once and <image>, that is, there exists at least one unused cluster. Numbers on each line are separated by spaces.
+
+Output
+
+In the first line print a single integer k (0 ≤ k ≤ 2n) — the number of operations needed to defragment the disk. Next k lines should contain the operations' descriptions as "i j" (copy the contents of the cluster number i to the cluster number j).
+
+Examples
+
+Input
+
+7 2
+2 1 2
+3 3 4 5
+
+
+Output
+
+0
+
+
+Input
+
+7 2
+2 1 3
+3 2 4 5
+
+
+Output
+
+3
+2 6
+3 2
+6 3
+
+Note
+
+Let's say that a disk consists of 8 clusters and contains two files. The first file occupies two clusters and the second file occupies three clusters. Let's look at examples of correct and incorrect positions of files after defragmentation.
+
+<image>
+
+Example 2: each file must occupy a contiguous area of memory.
+
+Example 3: the order of files to each other is not important, at first the second file can be written, and then — the first one.
+
+Example 4: violating the order of file fragments to each other is not allowed.
+
+Example 5: unused clusters should be located at the end, and in this example the unused clusters are 3, 7, 8.
+
+### Solution
 Let's think step by step.
-Step 1: <Action 1> Defining Function Structures Using pseudocode  \nWe start by defining the overall structure of the function `minTime`. This function will take the number of boards `n`, the number of painters `k`, and the array `arr` of board lengths as inputs. It will return the minimum time required to paint all the boards. We'll also define a helper function `numofPainter` within it to determine the number of painters needed for a given maximum length of boards that can be painted by one painter.\n[Pseudo Start]  \n```\nFunction minTime(arr, n, k):\n    Define helper function numofPainter(maxLen):\n        Initialize painters to 1\n        Initialize total to 0\n        Loop over each board in arr:\n            Update total with the board length\n            If total exceeds maxLen:\n                Reset total to current board length\n                Increment painters\n        Return painters\n    \n    Initialize low as maximum value in arr\n    Initialize high as sum of all elements in arr\n    While low is less than high:\n        Compute middle point p\n        Calculate current painters using numofPainter with p\n        If current painters is less than or equal to k:\n            Update high to p\n        Else:\n            Update low to p + 1\n    Return low\n[Pseudo End]  \n```
+<Step_Begin>
+### Step 1: **Defining High-Level Structure (Action 1)**
 
-Step 2: <Action 2> Refine part of the pseudocode  \nWe'll refine the `numofPainter` function to ensure it correctly calculates the number of painters required, given a constraint on the maximum length of boards one painter can handle. This function should iterate over the board lengths and accumulate the total until it exceeds `maxLen`, at which point we increment the painter count.\n[Pseudo Start]  \n```\nFunction minTime(arr, n, k):\n    Define helper function numofPainter(maxLen):\n        Set painters to 1\n        Set total to 0\n        For each board in arr:\n            Add board to total\n            If total is greater than maxLen:\n                Set total to board\n                Increase painters by 1\n        Return painters\n    \n    Set low to max(arr)\n    Set high to sum(arr)\n    While low is less than high:\n        Set p to low + (high - low) // 2\n        Set curr_painters to numofPainter(p)\n        If curr_painters <= k:\n            Set high to p\n        Else:\n            Set low to p + 1\n    Return low\n[Pseudo End]  \n```
+In this first step, we define the high-level structure of the solution. Our objective is to outline how to store the files and clusters, track which clusters are in use, and prepare the basic setup for further refinement.
 
-Step 3: <Action 2> Refine part of the pseudocode  \nWe refine the binary search logic to correctly adjust the range (`low` and `high`) based on whether the current number of painters `curr_painters` is within the allowed number of painters `k`. This ensures that we're narrowing down to the minimum possible time required.\n[Pseudo Start]  \n```\nFunction minTime(arr, n, k):\n    Define helper function numofPainter(maxLen):\n        Initialize painters to 1\n        Initialize total to 0\n        For each board in arr:\n            Add board to total\n            If total exceeds maxLen:\n                Set total to board\n                Increment painters\n        Return painters\n    \n    Set low to max(arr)\n    Set high to sum(arr)\n    While low is less than high:\n        Calculate p as low + (high - low) // 2\n        Calculate curr_painters using numofPainter(p)\n        If curr_painters <= k:\n            Set high to p\n        Else:\n            Set low to p + 1\n    Return low\n[Pseudo End]  \n```
+#### Goal:
+1. Parse the input to retrieve the number of clusters `n` and files `m`.
+2. Initialize a `memory` array to track which files occupy which clusters (initialized to `-1` for unused clusters).
+3. Store each file's cluster allocation.
 
-Step 4: <Action 3> Generate python code from the pseudocode  \nThe pseudocode is now sufficiently detailed, and we can translate it into the final Python code. This will involve implementing the `minTime` function with the `numofPainter` helper function and using binary search to find the minimum time.\nThe code is: [Code Start]\n```python\nclass Solution:\n    def minTime(self, arr, n, k):\n        def numofPainter(maxLen):\n            painters = 1\n            total = 0\n            for board in arr:\n                total += board\n                if total > maxLen:\n                    total = board\n                    painters += 1\n            return painters\n        low, high = max(arr), sum(arr)\n        while low < high:\n            p = low + (high - low) // 2\n            curr_painters = numofPainter(p)\n            if curr_painters <= k:\n                high = p\n            else:\n                low = p + 1\n        return low\n```\n[Code End]
+#### Pseudocode:
+```pseudo
+Function defragmentation(n, m, files):
+    Initialize memory array of size n+1 with -1 (to represent unused clusters)
+    Initialize an empty list to store the files and their respective clusters
+    For each file in files:
+        Store its clusters in the list and mark them in the memory array
+    Return the initialized memory and files list
+```
+<Step_End>
+---
+<Step_Begin>
+### Step 2: **Finding Free Clusters (Action 2)**
 
-### Description
-For some reason in many American cartoons anvils fall from time to time onto heroes' heads. Of course, safes, wardrobes, cruisers, planes fall sometimes too... But anvils do so most of all.\n\nAnvils come in different sizes and shapes. Quite often they get the hero stuck deep in the ground. But have you ever thought who throws anvils from the sky? From what height? We are sure that such questions have never troubled you!\n\nIt turns out that throwing an anvil properly is not an easy task at all. Let's describe one of the most popular anvil throwing models.\n\nLet the height p of the potential victim vary in the range [0;a] and the direction of the wind q vary in the range [ - b;b]. p and q could be any real (floating) numbers. Then we can assume that the anvil will fit the toon's head perfectly only if the following equation has at least one real root: \n\n<image>\n\nDetermine the probability with which an aim can be successfully hit by an anvil.\n\nYou can assume that the p and q coefficients are chosen equiprobably and independently in their ranges.\n\nInput\n\nThe first line contains integer t (1 ≤ t ≤ 10000) — amount of testcases.\n\nEach of the following t lines contain two space-separated integers a and b (0 ≤ a, b ≤ 106).\n\nPretests contain all the tests with 0 < a < 10, 0 ≤ b < 10.\n\nOutput\n\nPrint t lines — the probability of a successful anvil hit for each testcase. The absolute or relative error of the answer should not exceed 10 - 6.\n\nExamples\n\nInput\n\n2\n4 2\n1 2\n\n\nOutput\n\n0.6250000000\n0.5312500000
+In this step, we refine the pseudocode to handle finding the first free cluster on the disk. This is necessary because we need free clusters to move file fragments to contiguous positions.
 
-### solution
+#### Goal:
+1. Identify the first available free cluster.
+2. Return the index of this free cluster for use in later operations.
+
+#### Pseudocode:
+```pseudo
+Function find_free_cluster(memory):
+    For i from 1 to n:
+        If memory[i] == -1:
+            Return i  // Return first free cluster found
+    Return -1  // If no free cluster is found
+```
+<Step_End>
+---
+<Step_Begin>
+### Step 3: **Defragmenting Files (Action 2)**
+
+Now, we move to the main part of the problem: defragmenting the files. This involves moving file fragments to available contiguous clusters. We will loop through the files and their respective clusters, identifying fragments that are not in their correct position and moving them accordingly.
+
+#### Goal:
+1. Check if the current file's clusters are contiguous.
+2. If not, use the free clusters to move fragments into place.
+3. Track the sequence of operations that result in the defragmentation.
+
+#### Pseudocode:
+```pseudo
+Function defragment_files(memory, files):
+    Initialize result list to store operations
+    Initialize cnt to 0  // To track the expected position of file fragments
+    For each file in files:
+        For each cluster in file:
+            If cluster is not in the correct position (i != cnt):
+                Find the free cluster
+                Append operation (move cluster to the free position)
+                Update memory to reflect the changes
+                Update free cluster to next available cluster
+                Update the file list accordingly
+    Return the list of operations
+```
+<Step_End>
+---
+<Step_Begin>
+### Step 4: **Refining File Movement and Operations (Action 2)**
+
+In this step, we refine the logic for moving the files and ensuring that no clusters are overwritten during the defragmentation process. We will also ensure that the correct operations are recorded.
+
+#### Goal:
+1. Handle the case where we need to move fragments from a used cluster to a free cluster.
+2. Ensure that the file list and memory are updated correctly during each operation.
+
+#### Pseudocode:
+```pseudo
+    For each file in files:
+        For each cluster in file:
+            If cluster is not in the correct place:
+                Find a free cluster
+                Perform a copy operation from cluster to free cluster
+                Record the operation
+                Update memory and file list
+                Ensure no overwriting of other files' clusters
+    Return the list of operations
+```
+<Step_End>
+---
+<Step_Begin>
+### Step 5: **Generating Python Code (Action 3)**
+
+Now that the pseudocode has been fully refined, we proceed to translate it into Python code. This involves implementing the main function that drives the defragmentation process, handling input/output correctly, and printing the sequence of operations.
+
+#### Goal:
+1. Implement the `defragmentation` function in Python.
+2. Ensure the input is parsed correctly and the output matches the expected format.
+3. Ensure the program handles the movement of clusters and generates the correct sequence of operations.
+
+#### Python Code:
+
+```python
+def defragmentation(n, m, files):
+    # Initialize memory array with -1 (representing unused clusters)
+    memory = [-1] * (n + 1)  
+    d = []
+    
+    # Mark memory with files' cluster allocations
+    for i in range(m):
+        file = files[i][1:]  # Ignore first value (size of file)
+        for cluster in file:
+            memory[cluster] = i  # Mark the memory with the file index
+        d.append(file)
+    
+    free = -1
+    # Find the first free cluster
+    for i in range(1, n + 1):
+        if memory[i] == -1:
+            free = i
+            break
+    
+    res = []  # List to store operations
+    cnt = 0
+    
+    # Start defragmenting the files
+    for x in range(m):
+        for i in range(len(d[x])):
+            cnt += 1
+            if d[x][i] == cnt:
+                continue  # File fragment is already in the correct position
+            
+            y = memory[cnt]
+            if y == -1:
+                # Move fragment to the free cluster
+                res.append((d[x][i], cnt))
+                memory[d[x][i]] = -1
+                free = d[x][i]
+                d[x][i] = cnt
+                memory[cnt] = x
+                continue
+
+            # Move fragments to fill gaps
+            for j in range(len(d[y])):
+                if d[y][j] == cnt:
+                    res.append((cnt, free))
+                    res.append((d[x][i], cnt))
+                    d[y][j] = free
+                    memory[free] = y
+                    free = d[x][i]
+                    memory[free] = -1
+                    d[x][i] = cnt
+                    memory[cnt] = x
+    
+    # Output the result
+    print(len(res))
+    for op in res:
+        print(op[0], op[1])
+
+n, m = map(int, input().split())
+files = [list(map(int, input().split())) for _ in range(m)]
+defragmentation(n, m, files)
+```
+<Step_End>
+
+
+### Question
+A gene is represented as a string of length $n$ (where $n$ is divisible by $4$), composed of the letters $\mbox{A}$, $\mbox{C}$, $\textbf{T}$, and $\mbox{G}$.
+It is considered to be steady if each of the four letters occurs exactly $\frac{n}{4}$ times.  For example, $\textbf{GACT}$ and $\textbf{AAGTGCCT}$ are both steady genes.
+
+Bear Limak is a famous biotechnology scientist who specializes in modifying bear DNA to make it steady.  Right now, he is examining a gene represented as a string $\textit{gene}$.  It is not necessarily steady.  Fortunately, Limak can choose one (maybe empty) substring of $\textit{gene}$ and replace it with any string of the same length.
+
+Modifying a large substring of bear genes can be dangerous.
+Given a string $\textit{gene}$, can you help Limak find the length of the smallest possible substring that he can replace to make $\textit{gene}$ a steady gene?
+
+Note: A substring of a string $\boldsymbol{\mathrm{~S~}}$ is a subsequence made up of zero or more contiguous characters of $\boldsymbol{\mathrm{~S~}}$.
+
+As an example, consider $\textit{gene}=\textit{ACTGAAAG}$.  The substring $\boldsymbol{AA}$ just before or after $\mbox{G}$ can be replaced with $\textit{CT}$ or $\boldsymbol{TC}$.  One selection would create $\textbf{ACTGACTG}$.
+
+Function Description
+
+Complete the $\textit{steadyGene}$ function in the editor below.  It should return an integer that represents the length of the smallest substring to replace.  
+
+steadyGene has the following parameter:  
+
+gene: a string
+
+Input Format
+
+The first line contains an interger $n$ divisible by $4$, that denotes the length of a string $\textit{gene}$. 
+
+The second line contains a string $\textit{gene}$ of length $n$.
+
+Constraints
+
+$4\leq n\leq500000$  
+$n$ is divisible by $4$  
+$gene[i]\in[CGAT]$  
+
+Subtask  
+
+$4\leq n\leq2000$ in tests worth $30\%$ points.
+
+Output Format
+
+Print the length of the minimum length substring that can be replaced to make $\textit{gene}$ stable.
+
+Sample Input
+8  
+GAAATAAA
+
+Sample Output
+5
+
+Explanation
+
+One optimal solution is to replace $\textbf{AAATA}$ with $\textbf{TTCCG}$ resulting in $\textbf{GTTCCGAA}$. 
+
+The replaced substring has length $5$.
+
+### Solution
 Let's think step by step.
-Step 1: <Action 1> Defining Function Structures Using pseudocode  \nWe start by defining a function that will process multiple test cases. This function will take the number of test cases, `t`, as input. For each test case, it will read the values `a` and `b` and compute the probability of a successful anvil hit based on the given conditions.\n[Pseudo Start]  \n```\nFunction calculate_probabilities(t):\n    For each test case in range t:\n        Read values a and b\n        If a == 0 and b == 0:\n            Output 1\n        Else if a == 0:\n            Output 0.5\n        Else if b == 0:\n            Output 1\n        Else if a > 4 * b:\n            Calculate probability as (a - b) / a\n            Output the probability formatted to 10 decimal places\n        Else:\n            Calculate probability as a / 16 / b + 0.5\n            Output the probability formatted to 10 decimal places\n[Pseudo End]  \n```
+<Step_Begin>
+### Step 1: **Defining High-Level Structure (Action 1)**
 
-Step 2: <Action 2> Refine part of the pseudocode  \nLet's refine the pseudocode by detailing the loop and calculation logic. We will ensure that each test case is processed correctly and the results are formatted with the required precision.\n[Pseudo Start]  \n```\nFunction calculate_probabilities(t):\n    For each test case in range t:\n        Read values a and b\n        If a == 0 and b == 0:\n            Print 1.0000000000\n        Else if a == 0:\n            Print 0.5000000000\n        Else if b == 0:\n            Print 1.0000000000\n        Else if a > 4 * b:\n            probability = (a - b) / a\n            Print probability formatted to 10 decimal places\n        Else:\n            probability = a / (16 * b) + 0.5\n            Print probability formatted to 10 decimal places\n[Pseudo End]  \n```
+#### Goal:
+Define the overall solution framework and how the problem will be approached:
+1. Parse the input to get the string and calculate the target frequency of each nucleotide.
+2. Identify imbalances (if any) in nucleotide counts.
+3. Use a sliding window to find the smallest substring that can balance the nucleotide counts when replaced.
 
-Step 3: <Action 2> Refine part of the pseudocode  \nFurther refine the pseudocode by ensuring all operations are well-defined and formatted, particularly focusing on the handling of floating-point numbers and edge cases.\n[Pseudo Start]  \n```\nFunction calculate_probabilities(t):\n    For each test case in range t:\n        Read integers a and b\n        If a == 0 and b == 0:\n            Print 1.0000000000\n        Else if a == 0:\n            Print 0.5000000000\n        Else if b == 0:\n            Print 1.0000000000\n        Else if a > 4 * b:\n            probability = (a - b) / a\n            Print '%.10f' % probability\n        Else:\n            probability = a / (16 * b) + 0.5\n            Print '%.10f' % probability\n[Pseudo End]  \n```
+#### Pseudocode:
+```pseudo
+Function steadyGene(gene, n):
+    target = n / 4  # Each nucleotide should appear n/4 times
+    Count the frequency of each nucleotide in the gene
+    If all nucleotide counts are <= target:
+        Return 0  # Gene is already steady
+    
+    Use a sliding window approach:
+        Initialize start and end of the window
+        Track the frequency of nucleotides in the current window
+        Expand and shrink the window to find the minimal length substring that can be replaced
+    
+    Return the minimal length of the valid substring
+```
+<Step_End>
+---
+<Step_Begin>
+### Step 2: **Calculating Frequencies and Imbalances (Action 2)**
 
-Step 4: <Action 3> Generate python code from the pseudocode  \nConvert the refined pseudocode into working Python code. Ensure that the code correctly reads input, computes the probabilities, and outputs them with the specified precision.\nThe code is: [Code Start]\n```python\nt = int(input())\nfor _ in range(t):\n    (a, b) = map(int, input().split())\n    if a == 0 and b == 0:\n        print('1.0000000000')\n    elif a == 0:\n        print('0.5000000000')\n    elif b == 0:\n        print('1.0000000000')\n    elif a > 4 * b:\n        print('%.10f' % ((a - b) / a))\n    else:\n        print('%.10f' % (a / (16 * b) + 0.5))\n```\n[Code End]
+#### Goal:
+1. Count the frequency of each nucleotide in the gene.
+2. Identify nucleotides that exceed the target frequency and need balancing.
+
+#### Pseudocode:
+```pseudo
+Function calculateImbalances(gene, target):
+    Initialize a frequency dictionary for nucleotides ('A', 'C', 'T', 'G') with counts as 0
+    For each character in the gene:
+        Increment its count in the frequency dictionary
+    
+    Identify excess nucleotides:
+        For each nucleotide in the dictionary:
+            If its count > target:
+                Record the excess
+    
+    Return the frequency dictionary and excess nucleotides
+```
+<Step_End>
+---
+<Step_Begin>
+### Step 3: **Sliding Window Implementation (Action 2)**
+
+#### Goal:
+1. Use a sliding window to dynamically evaluate substrings.
+2. Track the frequency of nucleotides within the window.
+3. Ensure the substring balances the excess nucleotides.
+
+#### Pseudocode:
+```pseudo
+Function findMinimalSubstring(gene, n, target, full_freq):
+    Initialize start = 0, end = 0, and current_freq = {}
+    Initialize min_length = n (start with maximum possible length)
+    
+    While end < n:
+        Expand the window by including gene[end]
+        Update the current_freq for gene[end]
+        
+        While the window satisfies the balancing condition:
+            Update min_length with the current window size
+            Shrink the window from the start
+            Update current_freq for gene[start]
+            Increment start
+    
+        Increment end
+    
+    Return min_length
+```
+<Step_End>
+---
+<Step_Begin>
+### Step 4: **Satisfaction Check (Action 2)**
+
+#### Goal:
+Ensure that the current substring can balance the nucleotide counts when replaced.
+
+#### Pseudocode:
+```pseudo
+Function satisfiesCondition(current_freq, full_freq, target):
+    For each nucleotide in ('A', 'C', 'T', 'G'):
+        If full_freq[nucleotide] > target:
+            If current_freq[nucleotide] < full_freq[nucleotide] - target:
+                Return False
+    Return True
+```
+<Step_End>
+---
+<Step_Begin>
+### Step 5: **Implementing Python Code (Action 3)**
+
+#### Python Code:
+The refined pseudocode is translated into Python as follows:
+
+```python
+def satisfied(freq):
+    for bp in base_pairs:
+        if full_freq[bp] > n / 4:
+            if freq[bp] < full_freq[bp] - n / 4:
+                return False
+    return True
+
+def steadyGene(n, gene):
+    base_pairs = ['A', 'C', 'T', 'G']
+    
+    # Calculate the frequency of each nucleotide in the gene
+    full_freq = {bp: 0 for bp in base_pairs}
+    for nuc in gene:
+        full_freq[nuc] += 1
+    
+    # Check if the gene is already steady
+    if all(full_freq[bp] <= n / 4 for bp in base_pairs):
+        return 0  # No replacement needed
+    
+    # Sliding window to find the minimal substring
+    cur_freq = {bp: 0 for bp in base_pairs}
+    start = 0
+    min_length = n
+    
+    for end in range(n):
+        cur_freq[gene[end]] += 1
+        
+        while satisfied(cur_freq):
+            # Update minimal length
+            min_length = min(min_length, end - start + 1)
+            # Shrink the window
+            cur_freq[gene[start]] -= 1
+            start += 1
+    
+    return min_length
+
+n = int(input())
+gene = input()
+print(steadyGene(n, gene))
+```
+<Step_End>

@@ -96,17 +96,17 @@ class Generator:
         existing_ost_steps, next_ost_step_id = concat_ost_steps(solution_trace)
         io_input = (
             self.fewshot_ost_config["prompt_template"].format(
-                examples=self.fewshot_ost_prompt if not paraphrased else self.fewshot_ost_prompt_rephrased,
-                instruction=user_question,
+                examples=self.fewshot_ost_prompt,
+                question=user_question,
             )
             + existing_ost_steps
-            + f"Step {next_ost_step_id}:"
+            + f"<Step_Begin>\n### Step {next_ost_step_id}:"
         )
         # print(io_input)
         # io_input = {"role": "user", "content": io_input}
         # print(io_input)
         io_output_list = self.io.generate(
-            model_input=io_input, max_tokens=5120, num_return=self.num_a1_steps, stop_tokens=["\\n\\n", "Step"]
+            model_input=io_input, max_tokens=8192, num_return=self.num_a1_steps, stop_tokens=["<Step_End>"]
         )
         ost_step_list = [io_output.strip() for io_output in io_output_list]
 

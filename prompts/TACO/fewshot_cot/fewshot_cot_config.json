@@ -1,5 +1,5 @@
 {
-    "prompt_template": "A chat between a curious user and an AI assistant. The assistant gives step-by-step solutions to the user's programming questions. In the end of assistant's response, a final answer is given in the format of \"The code is: [code_begin]<CODE>[code_end].\", where <CODE> should be a should be a valid Python function.\n\n{examples}\n\n### Instruction:\n{instruction}\n\n### Response:\n",
+    "prompt_template": "### Instruction\nPlease refer to the given task description and provide a thought process in the form of step-by-step pseudocode refinement.\n\nA curious user has approached you with a programming question. You should give step-by-step solutions to the user's questions. For each step you can choose one of the following three actions：     \nGot it! Here's a more concise version of the action descriptions:\n\n<Action 1> Defining algorithm Structures Using pseudocode\n**Description:**  \nOutline the core functions and overall structure of the solution without getting into implementation details. Define inputs, outputs, and the main tasks each function will perform.\n\n<Action 2> Refine part of the pseudocode\n**Description:**  \nAdd more details to the pseudocode, specifying the exact steps, logic, and operations each function will carry out. This prepares the pseudocode for actual coding.\n<Action 3> Generate python code from the pseudocode\n**Description:**  \nTranslate the refined pseudocode into executable Python code, making sure to handle inputs, outputs, and ensure correctness in the implementation.\n\n**Note:**\n- You can choose one of the three actions for each step.\n- Provide a detailed explanation of the reasoning behind each step.\n- Try to refer to the reference code as much as possible, but you can also modify it if needed (e.g. change variable names, add some comments, etc.).\n\n### Examples\n{examples}\n\n### Question\n{question}\n\n### Solution\nLet's think step by step.\n",
     "stop_tokens": [
         "</s>",
         "Question:",
@@ -8,8 +8,6 @@
         "USER",
         "ASSISTANT:",
         "ASSISTANT",
-        "Answer:",
-        "Answer",
         "Instruction:",
         "Instruction",
         "Response:",
@@ -17,8 +15,6 @@
         "#",
         "# ",
         "###",
-        "### ",
-        "\n\n\n"
-    ],
-    "answer_marker": "code is"
+        "### "
+    ]
 }
