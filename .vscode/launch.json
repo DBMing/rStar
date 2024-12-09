@@ -8,7 +8,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "env": {
-                "CUDA_VISIBLE_DEVICES": "6"
+                "CUDA_VISIBLE_DEVICES": "0,1"
             },
             "args": [
                 "--dataset_name",
@@ -19,13 +19,16 @@
                 // "OpenAI",
                 "--model_ckpt",
                 // "gpt-4o-mini",
-                "/mnt/sdc1/jiangming/Project/rStar/Qwen/Qwen2.5-Coder-7B",
+                "/root/shared-nvme/Qwen2.5-Coder-14B-Instruct",
                 "--num_rollouts",
-                "10",
+                "3",
                 "--verbose",
                 "--run_outputs_dir",
-                "debug-test"
-            ]
+                "debug-test",
+                "--tensor_parallel_size",
+                "2",
+            ],
+            "python": "/base/mambaforge/bin/python"
         }
     ]
 }

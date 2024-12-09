@@ -6,7 +6,6 @@ sys.path.append(".")
 
 import numpy as np
 import os, random, json, math
-import wandb
 from tqdm import trange
 from typing import List, Dict, Tuple
 from copy import deepcopy
@@ -90,8 +89,11 @@ class Generator:
             + f"<Step_Begin>\n### Step {next_ost_step_id}:"
         )
         
+        new_stop_tokens = self.prompt["stop_tokens"]
+        new_stop_tokens.append(f"Step {next_ost_step_id + 1}")
+        
         io_output_list = self.io.generate(
-            model_input=io_input, max_tokens=8192, num_return=self.num_sampling, stop_tokens=["<Step_End>"]
+            model_input=io_input, max_tokens=8192, num_return=self.num_sampling, stop_tokens=new_stop_tokens
         )
         ost_step_list = [io_output.strip() for io_output in io_output_list]
 
