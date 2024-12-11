@@ -48,7 +48,8 @@ class Evaluator:
             
             
             correctness_results = check_generation_correctness(test_case, generation_code, debug=False, n_cases=10)
-            # print(correctness_results)
+            print(correctness_results)
+            
             
             if isinstance(correctness_results, list):
                 if True in correctness_results or False in correctness_results:
@@ -56,7 +57,10 @@ class Evaluator:
                 pass_case_count = correctness_results.count(True)
 
                 # 计算比例
-                pass_ratio = pass_case_count / len(correctness_results)
+                if len(correctness_results) > 0:
+                    pass_ratio = pass_case_count / len(correctness_results)
+                else:
+                    pass_ratio = 0
             else:
                 pass_ratio = 0
             

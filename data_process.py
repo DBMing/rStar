@@ -4,7 +4,7 @@ import os
 base_prompt = '''Please refer to the given task description and provide a thought process in the form of step-by-step pseudocode refinement.\n\nA curious user has approached you with a programming question. You should give step-by-step solutions to the user's questions. For each step you can choose one of the following three actions\n\n<Action 1> Defining algorithm Structures Using pseudocode\n**Description:**  \nOutline the core functions and overall structure of the solution without getting into implementation details. Define inputs, outputs, and the main tasks each function will perform.\n\n<Action 2> Refine part of the pseudocode\n**Description:**  \nAdd more details to the pseudocode, specifying the exact steps, logic, and operations each function will carry out. This prepares the pseudocode for actual coding.\n\n<Action 3> Generate python code from the pseudocode\n**Description:**  \nTranslate the refined pseudocode into executable Python code, making sure to handle inputs, outputs, and ensure correctness in the implementation.\n\n**Note:**\n- You can choose one of the three actions for each step.\n- Provide a detailed explanation of the reasoning behind each step.\n- Try to refer to the reference code as much as possible, but you can also modify it if needed (e.g. change variable names, add some comments, etc.).\n\n### Question\n{question}'''
 
 
-def process_dpo_data(dpo_data_file_folder_path):
+def process_dpo_data(dpo_data_file_folder_path, goal_data_file_folder_path = "", data_file_name = ""):
     """
     data format:
     [
@@ -55,11 +55,11 @@ def process_dpo_data(dpo_data_file_folder_path):
                 dpo_data["rejected"] = rejected
                 DPO_DATA.append(dpo_data)
 
-    with open("dpo_data.json", "w") as f:
+    with open(f"{goal_data_file_folder_path}/{data_file_name}_dpo_data.json", "w") as f:
         json.dump(DPO_DATA, f)
         
 
-def process_prm_data(prm_data_file_folder_path):
+def process_prm_data(prm_data_file_folder_path, goal_data_file_folder_path = "", data_file_name = ""):
     """
     data format:
     PRM_DATA_LABEL
@@ -123,14 +123,14 @@ def process_prm_data(prm_data_file_folder_path):
                 PRM_DATA_LABEL.append(prm_data_label)
                 PRM_DATA_SCORE.append(prm_data_score)
             
-    with open("prm_data_label.json", "w") as f:
+    with open(f"{goal_data_file_folder_path}/{data_file_name}_prm_data_label.json", "w") as f:
         json.dump(PRM_DATA_LABEL, f)
-    with open("prm_data_score.json", "w") as f:
+    with open(f"{goal_data_file_folder_path}/{data_file_name}_prm_data_score.json", "w") as f:
         json.dump(PRM_DATA_SCORE, f)
-    with open("step_info.json", "w") as f:
+    with open(f"{goal_data_file_folder_path}/{data_file_name}_step_info.json", "w") as f:
         json.dump(step_info, f)
         
-def process_sft_data(sft_data_file_folder_path, sft_num = 1000):
+def process_sft_data(sft_data_file_folder_path, sft_num = 1000, goal_data_file_folder_path = "", data_file_name = ""):
     """
     data format:
     SFT_DATA
@@ -172,7 +172,7 @@ def process_sft_data(sft_data_file_folder_path, sft_num = 1000):
             }
             SFT_DATA.append(sft_data)
             
-    with open("sft_data.json", "w") as f:
+    with open(f"{goal_data_file_folder_path}/{data_file_name}_sft_data.json", "w") as f:
         json.dump(SFT_DATA, f)
 
     print(f"question_num: {len(filenames)}")
@@ -182,12 +182,18 @@ def process_sft_data(sft_data_file_folder_path, sft_num = 1000):
 
 if __name__ == "__main__":
     
-    synthetic_data_file_folder_path = "/root/shared-nvme/gene_data/rStar/run_outputs/TACO/Qwen2.5-Coder-14B-Instruct/test_Q_10_rollout_6---2024-12-09_19-30-39---[default]/answer_sheets"
+    synthetic_data_file_folder_path = "/root/shared-nvme/gene_data/rStar/run_outputs/TACO/Qwen2.5-Coder-14B-Instruct/medium_hard_20_rollout_12---2024-12-10_10-05-31---[default]/answer_sheets"
     
-    # process_prm_data(synthetic_data_file_folder_path)
+    goal_data_file_folder_path = "/root/shared-nvme/gene_data/rStar/goal_data/medium_hard_20"
+    if not os.path.exists(goal_data_file_folder_path):
+        os.makedirs(goal_data_file_folder_path)
     
-    # process_sft_data(synthetic_data_file_folder_path, sft_num = 1000)
+    data_file_name = "medium_hard_20"
     
-    process_dpo_data(synthetic_data_file_folder_path)
+    process_prm_data(synthetic_data_file_folder_path, goal_data_file_folder_path, data_file_name)
+    
+    process_sft_data(synthetic_data_file_folder_path, sft_num = 1000, goal_data_file_folder_path = goal_data_file_folder_path, data_file_name = data_file_name)
+    
+    process_dpo_data(synthetic_data_file_folder_path, goal_data_file_folder_path, data_file_name)
 
 

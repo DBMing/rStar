@@ -21,7 +21,7 @@
                 // "gpt-4o-mini",
                 "/root/shared-nvme/Qwen2.5-Coder-14B-Instruct",
                 "--num_rollouts",
-                "3",
+                "20",
                 "--verbose",
                 "--run_outputs_dir",
                 "debug-test",

@@ -93,7 +93,8 @@ class MCTS_Searcher:
         verbose_print(f"==> Simulating node {leaf.id}...", self.verbose)
         path_2 = self._simulate(leaf, rollout_id)
         verbose_print(f"==> Backpropagating...", self.verbose)
-        self._backpropagate(path_1 + path_2)
+        if len(path_2) > 0:
+            self._backpropagate(path_1 + path_2)
         try:
             return path_2[-1]
         except:

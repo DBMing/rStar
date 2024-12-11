@@ -29,3 +29,4 @@ eval_src/testing_util_yxsx.py
 models/eval_vllm_paralle.py
 models/vllm_server_start.sh
 prompts/TACO/data_qwen_test.py
+/goal_data/
