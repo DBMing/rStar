@@ -62,11 +62,11 @@ def run_test(sample, test=None, debug=False, n_cases=None):
         n_cases = min(n_cases, len(in_outs["inputs"]))
         if which_type == CODE_TYPE.standard_input:
             n_cases = min(n_cases, 10)
-        indices = random.sample(range(len(in_outs["inputs"])), n_cases)
-        in_outs["inputs"] = [in_outs["inputs"][i] for i in indices]
-        in_outs["outputs"] = [in_outs["outputs"][i] for i in indices]
-        # in_outs["inputs"] = in_outs["inputs"][:n_cases]
-        # in_outs["outputs"] = in_outs["outputs"][:n_cases]
+        # indices = random.sample(range(len(in_outs["inputs"])), n_cases)
+        # in_outs["inputs"] = [in_outs["inputs"][i] for i in indices]
+        # in_outs["outputs"] = [in_outs["outputs"][i] for i in indices]
+        in_outs["inputs"] = in_outs["inputs"][:n_cases]
+        in_outs["outputs"] = in_outs["outputs"][:n_cases]
 
     for index, inputs in enumerate(in_outs["inputs"]):
         outputs = in_outs["outputs"][index]
